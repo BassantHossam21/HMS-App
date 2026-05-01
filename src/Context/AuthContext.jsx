@@ -13,7 +13,6 @@ export function AuthContextProvider({ children }) {
       try {
         const cleanToken = token.replace("Bearer ", "");
         const decoded = jwtDecode(cleanToken);
-        console.log("Decoded token:", decoded);
         setUser(decoded); // role، id، أي بيانات من token
       } catch (err) {
         console.error("Invalid token", err);

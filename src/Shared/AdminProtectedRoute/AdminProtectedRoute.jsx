@@ -18,7 +18,7 @@ export default function AdminProtectedRoute({ children, allowedRoles }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {
-    return <Navigate to="/home" replace />; // user يرجع للـ home
+    return <Navigate to="/" replace />; // user يرجع للـ root
   }
 
   // ✅ admin
