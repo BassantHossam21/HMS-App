@@ -25,7 +25,6 @@ import UsersList from "./UsersModule/Components/Users/UsersList/UsersList";
 import Rooms from "./RoomsModule/Components/Rooms/Rooms";
 import RoomsData from "./RoomsModule/RoomsData/RoomsData";
 import FacilityList from "./FacilityModule/Components/FacilityList/FacilityList";
-import AdsList from "./ADSModule/Components/ADSList/ADSList";
 import UserLayout from "./Shared/UserLayout/UserLayout";
 import LandingPage from "./LandingModule/LandingPage";
 import AllRooms from "./LandingModule/AllRooms/AllRooms";
@@ -34,6 +33,7 @@ import { setNavigator } from "./navigationService";
 import Favorites from "./LandingModule/Favorites/Favorites";
 import Details from "./LandingModule/Details/Details";
 import PaymentPage from "./LandingModule/Payment/Payment";
+import AdsList from "./AdsModule/Components/AdsList/AdsList";
 
 // NavigationHandler component for setting global navigator
 function NavigationHandler() {
