@@ -1,0 +1,11 @@
+.MuiChartsLegend-series {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: space-between !important;
+}
+.MuiChartsLegend-item {
+  width: 100%;
+}
+.custom_width{
+  width:100%;
+}
