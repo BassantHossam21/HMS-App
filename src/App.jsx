@@ -34,6 +34,7 @@ import Favorites from "./LandingModule/Favorites/Favorites";
 import Details from "./LandingModule/Details/Details";
 import PaymentPage from "./LandingModule/Payment/Payment";
 import AdsList from "./AdsModule/Components/AdsList/AdsList";
+import PaymentSuccess from "./LandingModule/Payment/paymentsuccess";
 
 // NavigationHandler component for setting global navigator
 function NavigationHandler() {
@@ -134,6 +135,10 @@ function App() {
         {
           path: "payment/:bookingId",
           element: <PaymentPage />,
+        },
+        {
+          path: "payment-success/:id",
+          element: <PaymentSuccess />,
         },
       ],
     },

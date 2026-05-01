@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import axiosClient from "../../Api/AxiosClient";
+import { useNavigate } from "react-router-dom";
+
 
 // Card Element styling options
 const CARD_ELEMENT_OPTIONS = {
@@ -27,6 +29,8 @@ const CARD_ELEMENT_OPTIONS = {
 const CheckoutForm = ({ bookingId, amount, currency = "usd", onSuccess, onError }) => {
   const stripe = useStripe();
   const elements = useElements();
+  const navigate = useNavigate();
+
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -66,6 +70,7 @@ const CheckoutForm = ({ bookingId, amount, currency = "usd", onSuccess, onError 
 
       // 3. Handle successful backend response
       onSuccess?.(response.data);
+      navigate(`/payment-success/${bookingId}`);
 
     } catch (error) {
       const message = error.response?.data?.message || error.message || "An error occurred during payment";

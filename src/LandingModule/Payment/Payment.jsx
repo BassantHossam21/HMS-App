@@ -86,7 +86,8 @@ export default function PaymentPage() {
 
           <Grid container spacing={4} sx={{ display: "flex" }}>
             {/* Left Side - Transfer Info */}
-            <Grid size={{ xs: 12, md: 6 }}
+            <Grid
+              size={{ xs: 12, md: 6 }}
               sx={{ width: { md: "20%", xs: "30%" }, mx: { md: 13, xs: 4 } }}
             >
               <Typography variant="body2" gutterBottom>
@@ -134,7 +135,6 @@ export default function PaymentPage() {
                   onSuccess={(data) => {
                     toast.success("Payment successful");
                     console.log("Payment successful");
-                    navigate("/");
                   }}
                   onError={(error) => {
                     toast.error(error);
