@@ -69,6 +69,7 @@ function App() {
       errorElement: <NotFound />,
       children: [
         { index: true, element: <Login /> },
+        { path: "login", element: <Login /> },
         { path: "register", element: <Register /> },
         { path: "forgetpass", element: <ForgetPassword /> },
         { path: "resetpass", element: <ResetPassword /> },

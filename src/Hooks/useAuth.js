@@ -1,13 +1,12 @@
 import { toast } from "react-toastify";
 import axiosClient from "../Api/AxiosClient.js";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 import { useContext } from "react";
 import { AuthContext } from "../Context/AuthContext.jsx";
 
 export default function useAuth() {
   const navigate = useNavigate();
-  const { user, setUser } = useContext(AuthContext);
+  const { user, setUser, saveUserData } = useContext(AuthContext);
 
   const register = async (data) => {
     const formData = new FormData();
@@ -47,8 +46,7 @@ export default function useAuth() {
 
       localStorage.setItem("access_token", token);
 
-      const decoded = jwtDecode(token.replace("Bearer ", ""));
-      setUser(decoded);
+      const decoded = saveUserData();
 
       toast.success(response.data.message || "Login successful");
 

@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import useLandingRooms from "./../../Hooks/useLandingRooms";
 import axiosClient from "../../Api/AxiosClient";
 import { toast } from "react-toastify";
+import { AuthContext } from "../../Context/AuthContext";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import {
   Box,
   Typography,
-  Breadcrumbs,
-  Link,
-  Grid,
   CircularProgress,
   Stack,
   Button,
   Rating,
   TextField,
-  Divider,
 } from "@mui/material";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import placeholderImg from "../../assets/images/hotals1 (1).png";
+import roomImg1 from "../../assets/images/RoomDetails(1).png";
+import roomImg2 from "../../assets/images/RoomDetails(2).png";
+import roomImg3 from "../../assets/images/RoomDetails(3).png";
 import imgFacility1 from "../../assets/images/ic_bedroom.png";
 import imgFacility2 from "../../assets/images/ic_bathroom.png";
 import imgFacility3 from "../../assets/images/ic_diningroom.png";
@@ -33,7 +33,9 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 export default function Details() {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { getRoomDetailsById, roomDetails } = useLandingRooms();
+  const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
 
   // Booking state — same pattern as Header.jsx
@@ -59,6 +61,7 @@ export default function Details() {
 
   const totalPrice =
     nights > 0 && roomDetails?.price ? nights * roomDetails.price : null;
+
   // ──=============== Handle Booking Submission ==========──
   const handleContinueBook = async () => {
     const start = startDate ? startDate.format("YYYY-MM-DD") : "";
@@ -75,6 +78,13 @@ export default function Details() {
       room: roomId,
       totalPrice: totalPrice,
     };
+
+    // Check if user is logged in before booking
+    if (!user) {
+      toast.info("Please login first to complete your booking.");
+      navigate("/auth/login", { state: { from: location } });
+      return;
+    }
 
     try {
       const response = await axiosClient.post(
@@ -93,12 +103,7 @@ export default function Details() {
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="80vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
         <CircularProgress sx={{ color: "#152C5B" }} />
       </Box>
     );
@@ -115,10 +120,11 @@ export default function Details() {
   }
 
   const images = roomDetails.images || [];
-  const mainImage = images[0] || placeholderImg;
-  const sideImages = [images[1] || placeholderImg, images[2] || placeholderImg];
+  // Static gallery images for the room details page
+  const img1 = roomImg1;
+  const img2 = roomImg2;
+  const img3 = roomImg3;
 
-  // ── Facilities rows ──
   const facilitiesRow1 = [
     { img: imgFacility1, label: `${roomDetails.capacity ?? 5} bedroom` },
     { img: imgFacility4, label: "1 living room" },
@@ -135,393 +141,329 @@ export default function Details() {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ bgcolor: "#fff", minHeight: "100vh", pb: 10 }}>
-        <Box sx={{ px: { xs: 2, md: 10 }, pt: 4 }}>
-          {/* ── Breadcrumbs ── */}
-          <Breadcrumbs
-            separator="/"
-            aria-label="breadcrumb"
-            sx={{
-              mb: 2,
-              fontSize: "15px",
-              fontFamily: "'Poppins', sans-serif",
-            }}
-          >
-            <Link
-              underline="hover"
-              color="gray"
-              href="/"
-              sx={{ cursor: "pointer" }}
-            >
-              Home
-            </Link>
-            <Typography
-              color="#152C5B"
-              sx={{ fontWeight: 500, fontFamily: "'Poppins', sans-serif" }}
-            >
-              Room Details
-            </Typography>
-          </Breadcrumbs>
+        <Box sx={{ mx: { md: 16, xs: 2 }, mt: { xs: 4, md: 6 } }}>
 
-          {/* ── Room Name ── */}
-          <Box sx={{ textAlign: "center", mb: 4 }}>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 700,
-                color: "#152C5B",
-                fontFamily: "'Poppins', sans-serif",
-              }}
-            >
-              Room {roomDetails.roomNumber}
+          {/* ── Room Name (centered) + Location ── */}
+          <Box sx={{ textAlign: "center", mt: 3, mb: 1 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: "#152C5B" }}>
+              {roomDetails.roomNumber}
             </Typography>
-            {roomDetails.createdBy?.userName && (
-              <Typography
-                sx={{
-                  color: "#9CA3AF",
-                  fontSize: 15,
-                  mt: 0.5,
-                  fontFamily: "'Poppins', sans-serif",
-                }}
-              >
-                Hosted by {roomDetails.createdBy.userName}
-              </Typography>
-            )}
+            <Typography sx={{ color: "gray", fontSize: 14 }}>Bogor, Indonesia</Typography>
+          </Box>
+          <Box sx={{ mb: 2 }}>
+            <Typography sx={{ color: "gray", fontSize: 14 }}>All Rooms</Typography>
           </Box>
 
           {/* ── Photo Gallery ── */}
-          <Grid container spacing={2} sx={{ mb: 6 }}>
-            {/* Main large image */}
-            <Grid item xs={12} md={6}>
+          <Box sx={{ display: "flex", gap: 2, mb: 5 }}>
+            <Box
+              sx={{
+                width: "54%",
+                height: "455px",
+                borderRadius: 5,
+                backgroundImage: `url("${img1}")`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
+            <Box sx={{ width: "45%" }}>
               <Box
-                component="img"
-                src={mainImage}
-                alt={`Room ${roomDetails.roomNumber}`}
                 sx={{
                   width: "100%",
-                  height: { xs: 250, md: 420 },
-                  objectFit: "cover",
-                  borderRadius: "16px",
+                  height: "220px",
+                  mb: 2,
+                  borderRadius: 5,
+                  backgroundImage: `url("${img2}")`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
                 }}
               />
-            </Grid>
+              <Box
+                sx={{
+                  width: "100%",
+                  height: "220px",
+                  borderRadius: 5,
+                  backgroundImage: `url("${img3}")`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
+            </Box>
+          </Box>
 
-            {/* Two side images stacked */}
-            <Grid item xs={12} md={6}>
-              <Stack spacing={2} height="100%">
-                {sideImages.map((img, idx) => (
-                  <Box
-                    key={idx}
-                    component="img"
-                    src={img}
-                    alt={`Room view ${idx + 2}`}
-                    sx={{
-                      width: "100%",
-                      height: { xs: 160, md: 200 },
-                      objectFit: "cover",
-                      borderRadius: "16px",
-                      flex: 1,
-                    }}
-                  />
-                ))}
-              </Stack>
-            </Grid>
-          </Grid>
+          {/* ── Description + Booking Card ── */}
+          <Box sx={{ display: "flex", width: "100%", mt: 5, gap: 4 }}>
 
-          {/* ── Main Content: Description + Booking Card ── */}
-          <Grid container spacing={4} sx={{ mb: 6 }}>
-            {/* ── LEFT: Description + Facilities ── */}
-            <Grid item xs={12} md={8}>
-              {/* Description paragraphs */}
+            {/* LEFT: Description + Facilities */}
+            <Box sx={{ width: "55%", flexShrink: 0 }}>
               <Typography
-                variant="body1"
-                sx={{ color: "#6B7280", lineHeight: 1.8, mb: 2 }}
+                sx={{
+                  pt: 3,
+                  color: "gray",
+                  maxHeight: { xs: 280, md: "auto" },
+                  overflowY: { xs: "auto", md: "visible" },
+                  fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" },
+                  lineHeight: 1.9,
+                }}
               >
                 Minimal techno is a minimalist subgenre of techno music. It is
                 characterized by a stripped-down aesthetic that exploits the use
                 of repetition and understated development. Minimal techno is
                 thought to have been originally developed in the early 1990s by
                 Detroit-based producers Robert Hood and Daniel Bell.
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{ color: "#6B7280", lineHeight: 1.8, mb: 2 }}
-              >
+                <br />
                 Such trends saw the demise of the soul-infused techno that
                 typified the original Detroit sound. Robert Hood has noted that
                 he and Daniel Bell both realized something was missing from
                 techno in the post-rave era.
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{ color: "#6B7280", lineHeight: 1.8 }}
-              >
+                <br />
                 Design is a plan or specification for the construction of an
                 object or system or for the implementation of an activity or
                 process, or the result of that plan or specification in the form
-                of a prototype, product or process. The national agency for
-                design: enabling Singapore to use design for economic growth and
-                to make lives better.
+                of a prototype, product or process.
               </Typography>
 
-              {/* ── Facilities Row 1 ── */}
-              <Stack direction="row" spacing={5} sx={{ mt: 4 }}>
+              {/* Facilities Row 1 */}
+              <Box sx={{ display: "flex", width: "100%", gap: 3, mt: { md: 10, xs: 5 } }}>
                 {facilitiesRow1.map((f, i) => (
-                  <Stack key={i} alignItems="center" spacing={1}>
+                  <Box key={i} sx={{ width: "17%" }}>
                     <Box
-                      component="img"
-                      src={f.img}
-                      alt={f.label}
-                      sx={{ width: 50, height: 50 }}
+                      sx={{
+                        width: "50%",
+                        height: "40px",
+                        mb: 1,
+                        backgroundImage: `url(${f.img})`,
+                        backgroundSize: "contain",
+                        backgroundRepeat: "no-repeat",
+                      }}
                     />
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#6B7280", textAlign: "center" }}
-                    >
-                      {f.label}
+                    <Typography variant="span" sx={{ fontWeight: 700 }}>
+                      {f.label.split(" ")[0]}
                     </Typography>
-                  </Stack>
+                    <Typography variant="span" color="gray">
+                      {" "}{f.label.split(" ").slice(1).join(" ")}
+                    </Typography>
+                  </Box>
                 ))}
-              </Stack>
+              </Box>
 
-              {/* ── Facilities Row 2 ── */}
-              <Stack direction="row" spacing={5} sx={{ mt: 3 }}>
+              {/* Facilities Row 2 */}
+              <Box sx={{ display: "flex", width: "100%", gap: 3, mt: 3 }}>
                 {facilitiesRow2.map((f, i) => (
-                  <Stack key={i} alignItems="center" spacing={1}>
+                  <Box key={i} sx={{ width: "17%" }}>
                     <Box
-                      component="img"
-                      src={f.img}
-                      alt={f.label}
-                      sx={{ width: 50, height: 50 }}
+                      sx={{
+                        width: { md: "42%", xs: "90%" },
+                        height: "38px",
+                        mb: 1,
+                        backgroundImage: `url(${f.img})`,
+                        backgroundSize: "contain",
+                        backgroundRepeat: "no-repeat",
+                      }}
                     />
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#6B7280", textAlign: "center" }}
-                    >
-                      {f.label}
+                    <Typography variant="span" sx={{ fontWeight: 700 }}>
+                      {f.label.split(" ")[0]}
                     </Typography>
-                  </Stack>
+                    <Typography variant="span" color="gray">
+                      {" "}{f.label.split(" ").slice(1).join(" ")}
+                    </Typography>
+                  </Box>
                 ))}
-              </Stack>
-            </Grid>
+              </Box>
+            </Box>
 
-            {/* ── RIGHT: Booking Card ── */}
-            <Grid item xs={12} md={4}>
-              <Box
-                sx={{
-                  border: "1px solid #E5E7EB",
-                  borderRadius: "15px",
-                  p: 3,
-                  boxShadow: "0px 4px 20px rgba(0,0,0,0.05)",
-                }}
-              >
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: 600, color: "#152C5B", mb: 1.5 }}
-                >
+            {/* RIGHT: Booking Card */}
+            <Box
+              sx={{
+                flex: 1,
+                px: { md: 5, xs: 2 },
+                pt: 4,
+                pb: 4,
+                border: 1,
+                borderColor: "rgb(225, 225, 225)",
+                mt: 1,
+                borderRadius: 3,
+                minWidth: 0,
+              }}
+            >
+              <Box>
+                <Typography sx={{ mt: 4, mb: 1, fontWeight: 600, fontSize: 18 }}>
                   Start Booking
                 </Typography>
-
-                {/* Price */}
-                <Stack
-                  direction="row"
-                  alignItems="baseline"
-                  spacing={1}
-                  sx={{ mb: 0.5 }}
-                >
-                  <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 700, color: "#3252DF" }}
-                  >
-                    ${roomDetails?.price}
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{ color: "#B0B0B0", fontWeight: 400 }}
-                  >
-                    per night
-                  </Typography>
-                </Stack>
-
-                {/* Discount */}
+                <Typography variant="span" sx={{ fontSize: 25, color: "green" }}>
+                  ${roomDetails?.price}
+                </Typography>
                 <Typography
-                  variant="body2"
-                  sx={{ color: "#E74C3C", fontWeight: 500, mb: 2.5 }}
+                  variant="span"
+                  sx={{ fontWeight: 300, fontSize: 22, color: "rgb(191, 191, 191)" }}
                 >
-                  Discount {roomDetails?.discount}% Off
+                  {" "}per night
                 </Typography>
-
-                {/* ── Pick a Date — same style as Header.jsx ── */}
-                <Typography sx={{ fontWeight: 500, mb: 1, color: "#152C5B" }}>
-                  Pick a Date
+                <Typography sx={{ color: "red", mt: 0 }}>
+                  Discount {roomDetails?.discount}% off
                 </Typography>
+              </Box>
 
-                {/* Start Date */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    bgcolor: "#F5F6F8",
-                    borderRadius: 1,
-                    px: 1,
-                    mb: 1.5,
-                  }}
-                >
-                  <CalendarMonthIcon sx={{ color: "#152C5B", mr: 1 }} />
-                  <DatePicker
-                    label="Start"
-                    value={startDate}
-                    onChange={setStartDate}
-                    minDate={null}
-                    slotProps={{
-                      textField: {
-                        variant: "standard",
-                        InputProps: { disableUnderline: true },
-                        sx: { width: "100%" },
-                      },
-                    }}
-                  />
+              <Box>
+                <Box sx={{ mb: 2, mt: 8 }}>
+                  <Typography>Pick a Date</Typography>
                 </Box>
 
-                {/* End Date */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    bgcolor: "#F5F6F8",
-                    borderRadius: 1,
-                    px: 1,
-                    mb: 2,
-                  }}
-                >
-                  <CalendarMonthIcon sx={{ color: "#152C5B", mr: 1 }} />
-                  <DatePicker
-                    label="End"
-                    value={endDate}
-                    onChange={setEndDate}
-                    minDate={startDate}
-                    slotProps={{
-                      textField: {
-                        variant: "standard",
-                        InputProps: { disableUnderline: true },
-                        sx: { width: "100%" },
-                      },
+                {/* Pick a Date — same style as Header.jsx */}
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      bgcolor: "#F5F6F8",
+                      borderRadius: 1,
+                      px: 1,
                     }}
-                  />
+                  >
+                    <CalendarMonthIcon sx={{ color: "#152C5B", mr: 1 }} />
+                    <DatePicker
+                      label="Start"
+                      value={startDate}
+                      onChange={setStartDate}
+                      slotProps={{
+                        textField: {
+                          variant: "standard",
+                          InputProps: { disableUnderline: true },
+                          sx: { width: "100%" },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      bgcolor: "#F5F6F8",
+                      borderRadius: 1,
+                      px: 1,
+                    }}
+                  >
+                    <CalendarMonthIcon sx={{ color: "#152C5B", mr: 1 }} />
+                    <DatePicker
+                      label="End"
+                      value={endDate}
+                      onChange={setEndDate}
+                      minDate={startDate}
+                      slotProps={{
+                        textField: {
+                          variant: "standard",
+                          InputProps: { disableUnderline: true },
+                          sx: { width: "100%" },
+                        },
+                      }}
+                    />
+                  </Box>
                 </Box>
 
-                {/* Total price summary */}
-                {totalPrice !== null && (
-                  <Typography variant="body2" sx={{ color: "#6B7280", mb: 2 }}>
-                    You will pay{" "}
-                    <Box
-                      component="span"
-                      sx={{ fontWeight: 700, color: "#152C5B" }}
-                    >
-                      ${totalPrice} USD
-                    </Box>{" "}
-                    per{" "}
-                    <Box
-                      component="span"
-                      sx={{ fontWeight: 700, color: "#152C5B" }}
-                    >
-                      {nights} Night{nights !== 1 ? "s" : ""}
-                    </Box>
+                <Box mt={1}>
+                  <Typography variant="span" color="gray">You will pay </Typography>
+                  <Typography variant="span" sx={{ fontWeight: 700 }}>
+                    ${totalPrice ?? roomDetails?.price} USD
                   </Typography>
-                )}
+                  <Typography variant="span" color="gray"> per </Typography>
+                  <Typography variant="span" sx={{ fontWeight: 700 }}>
+                    {roomDetails?.capacity ?? 2} Person
+                  </Typography>
+                </Box>
 
-                {/* Continue Book button */}
                 <Button
                   onClick={handleContinueBook}
-                  variant="contained"
-                  fullWidth
                   sx={{
-                    bgcolor: "#3252DF",
-                    py: 1.5,
-                    borderRadius: 1,
-                    fontSize: 16,
-                    fontWeight: 500,
+                    width: "60%",
+                    background: "#3252DF",
+                    mt: 3,
+                    mx: 8,
+                    color: "white",
                     textTransform: "none",
-                    "&:hover": { bgcolor: "#2541c4" },
+                    borderRadius: 1,
+                    py: 1.2,
+                    fontSize: 15,
+                    "&:hover": { background: "#2541c4" },
                   }}
                 >
                   Continue Book
                 </Button>
               </Box>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
-          {/* ── Rating & Comment Section ── */}
-          <Divider sx={{ mb: 4 }} />
-          <Grid container spacing={6}>
-            {/* Rating */}
-            <Grid item xs={12} md={6}>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 600, color: "#152C5B", mb: 1 }}
-              >
-                Rate
-              </Typography>
-              <Rating
-                value={ratingValue}
-                onChange={(_, newVal) => setRatingValue(newVal)}
-                sx={{ fontSize: 36, mb: 2 }}
-              />
-              <Typography sx={{ fontWeight: 500, color: "#152C5B", mb: 1 }}>
-                Message
-              </Typography>
-              <TextField
-                placeholder="Write your review..."
-                multiline
-                minRows={3}
-                fullWidth
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    bgcolor: "#F5F6F8",
-                  },
-                }}
-              />
-            </Grid>
-
-            {/* Add Your Comment */}
-            <Grid item xs={12} md={6}>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 600, color: "#152C5B", mb: 2 }}
-              >
-                Add Your Comment
-              </Typography>
-              <TextField
-                placeholder="Share your experience about this room..."
-                multiline
-                minRows={5}
-                fullWidth
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    bgcolor: "#F5F6F8",
-                  },
-                }}
-              />
-              <Button
-                variant="contained"
-                sx={{
-                  mt: 2,
-                  bgcolor: "#3252DF",
-                  borderRadius: 1,
-                  textTransform: "none",
-                  px: 4,
-                  py: 1.2,
-                  fontWeight: 500,
-                  "&:hover": { bgcolor: "#2541c4" },
-                }}
-              >
-                Send Comment
-              </Button>
-            </Grid>
-          </Grid>
+          {/* ── Reviews Section (only if logged in) ── */}
+          {user && (
+            <Box sx={{ display: "flex", mt: 4 }}>
+              <Box sx={{ width: "50%", borderRight: 1, borderColor: "#ddd", pr: 4 }}>
+                <Typography sx={{ fontWeight: 600, mb: 1 }}>Rate</Typography>
+                <Rating
+                  value={ratingValue}
+                  onChange={(_, newVal) => setRatingValue(newVal)}
+                  sx={{ color: "#f4c150" }}
+                />
+                <Typography sx={{ mt: 3, mb: 1 }}>Message</Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  variant="outlined"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  sx={{
+                    "& fieldset": { borderColor: "#ddd" },
+                    borderRadius: "10px",
+                    width: "95%",
+                  }}
+                />
+                <Button
+                  size="large"
+                  variant="contained"
+                  sx={{
+                    borderRadius: 1,
+                    textTransform: "none",
+                    px: 6,
+                    py: 1,
+                    mt: 2,
+                    bgcolor: "#1a73e8",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  Rate
+                </Button>
+              </Box>
+              <Box sx={{ width: "50%", mt: 9.5, ml: 3.5 }}>
+                <Typography sx={{ fontWeight: 600 }}>Add Your Comment</Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  variant="outlined"
+                  sx={{
+                    mt: 1,
+                    "& fieldset": { borderColor: "#ddd" },
+                    borderRadius: "10px",
+                  }}
+                />
+                <Button
+                  size="large"
+                  variant="contained"
+                  sx={{
+                    borderRadius: 1,
+                    textTransform: "none",
+                    px: 6,
+                    py: 1,
+                    mt: 2,
+                    bgcolor: "#1a73e8",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  Send
+                </Button>
+              </Box>
+            </Box>
+          )}
         </Box>
       </Box>
     </LocalizationProvider>
