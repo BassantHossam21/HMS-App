@@ -12,7 +12,7 @@ import {
   Paper,
 } from "@mui/material";
 import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
-import { useBookingApi } from "../../../Hooks/useBooking";
+import { useBookingApi } from "@/Hooks/useBooking";
 
 export default function BookingList() {
   const { loading, data, getBookings } = useBookingApi();
