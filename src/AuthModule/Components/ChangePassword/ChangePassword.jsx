@@ -12,9 +12,9 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
-import loginImg from "../../../assets/images/Login.jpg";
+import loginImg from "@/assets/images/Login.jpg";
 import { toast } from "react-toastify";
-import useAuth from "../../../Hooks/useAuth";
+import useAuth from "@/Hooks/useAuth";
 
 const Item = styled(Paper)(() => ({
   backgroundColor: "#fff",

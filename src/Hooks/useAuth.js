@@ -8,9 +8,9 @@ export default function useAuth() {
   const navigate = useNavigate();
   const { user, setUser, saveUserData } = useContext(AuthContext);
 
+  // ========================== Register ==========================
   const register = async (data) => {
     const formData = new FormData();
-    // Append text fields
     formData.append("userName", data.userName);
     formData.append("email", data.email);
     formData.append("phoneNumber", data.phoneNumber);
@@ -19,7 +19,6 @@ export default function useAuth() {
     formData.append("confirmPassword", data.confirmPassword);
     formData.append("role", "user");
 
-    // Append profile image (file)
     if (data.profileImage && data.profileImage[0]) {
       formData.append("profileImage", data.profileImage[0]);
     }
@@ -28,11 +27,13 @@ export default function useAuth() {
       const response = await axiosClient.post("/api/v0/portal/users", formData);
       console.log(response);
       toast.success(response?.data?.message || "Registration successful");
-      navigate("/"); // Navigate to login
+      navigate("/auth/login"); // Navigate to login
     } catch (error) {
       toast.error(error?.response?.data?.message || "Registration failed");
     }
   };
+
+  //=========================Login=========================
   const login = async (data) => {
     try {
       localStorage.removeItem("access_token");
@@ -65,7 +66,7 @@ export default function useAuth() {
     navigate("/");
   };
 
-  // ----------------- Forget Password -----------------
+  //=========================Forget Password=========================
   const forgetPassword = async (data) => {
     try {
       const response = await axiosClient.post(
@@ -80,7 +81,7 @@ export default function useAuth() {
     }
   };
 
-  // ----------------- Reset Password -----------------
+  //=========================Reset Password=========================
   const resetPassword = async (data) => {
     try {
       const response = await axiosClient.post(
