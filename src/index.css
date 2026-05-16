@@ -9,9 +9,55 @@ body {
   display: flex !important;
   justify-content: space-between !important;
 }
+
 .MuiChartsLegend-item {
   width: 100%;
 }
-.custom_width{
-  width:100%;
+
+.custom_width {
+  width: 100%;
+}
+
+/*================ Global Table Pagination Custom Design */
+.MuiTablePagination-root {
+  border-bottom: none !important;
+  color: #1F263E !important;
+  margin-top: 12px !important;
+}
+
+.MuiTablePagination-toolbar {
+  height: 80px !important;
+  min-height: 80px !important;
+  padding: 0 24px !important;
+}
+
+.MuiTablePagination-selectLabel, 
+.MuiTablePagination-displayedRows {
+  font-weight: 600 !important;
+  margin-top: 14px !important;
+}
+
+.MuiTablePagination-select {
+  font-weight: 600 !important;
+  background-color: #F8F9FB !important;
+  border-radius: 8px !important;
+  padding: 6px 20px 6px 12px !important; /* Brought the arrow slightly closer */
+}
+
+.MuiTablePagination-actions .MuiIconButton-root {
+  color: #203FC7 !important;
+  background-color: #F8F9FB !important;
+  border-radius: 8px !important;
+  margin-left: 8px !important;
+  padding: 6px !important;
+  transition: 0.3s !important;
+}
+
+.MuiTablePagination-actions .MuiIconButton-root:hover {
+  background-color: #E2E5EB !important;
+}
+
+.MuiTablePagination-actions .MuiIconButton-root.Mui-disabled {
+  color: #b0b0b0 !important;
+  background-color: transparent !important;
 }

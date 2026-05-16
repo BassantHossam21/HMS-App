@@ -34,7 +34,7 @@ import Details from "./LandingModule/Details/Details";
 import PaymentPage from "./LandingModule/Payment/Payment";
 import AdsList from "./AdsModule/Components/AdsList/AdsList";
 import PaymentSuccess from "./LandingModule/Payment/paymentsuccess";
-import BookingList from './BookingModule/Components/BookingList/BookingList';
+import BookingList from "./BookingModule/Components/BookingList/BookingList";
 
 // NavigationHandler component for setting global navigator
 function NavigationHandler() {

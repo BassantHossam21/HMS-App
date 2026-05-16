@@ -21,7 +21,9 @@ export default function DashboardLayout() {
         component="main"
         sx={{
           flexGrow: 1,
-          overflow: "hidden",
+          overflow: "auto",
+          minHeight: "100vh",
+          px: { xs: 2, md: 3 }
         }}
       >
         <AdminNavbar />
