@@ -8,7 +8,7 @@ import {
   CardContent,
   Chip,
 } from "@mui/material";
-import { useAdsApi } from "../../Hooks/useLandingAds";
+import { useAdsApi } from "@/Hooks/useLandingAds";
 
 export default function Ads() {
   let { getAds, data, loading } = useAdsApi();
