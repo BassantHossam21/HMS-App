@@ -14,93 +14,135 @@ import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { AuthContext } from "../../Context/AuthContext";
 
-export default function SideBar() {
-  const drawerWidth = 240;
-  const collapsedWidth = 90;
+export default function SideBar({ mobileOpen, handleDrawerToggle }) {
+  // Desktop specific state
+  const [desktopOpen, setDesktopOpen] = useState(true);
+  const { logout } = useContext(AuthContext);
 
-  const [open, setOpen] = useState(true);
-  let { logout } = useContext(AuthContext);
+  const drawerContent = (isMobile) => {
+    // If mobile, the drawer is technically always "open" visually when mounted
+    const isOpen = isMobile ? true : desktopOpen;
+    return (
+      <>
+        {/* Toggle Button (Hidden on Mobile) */}
+        {!isMobile && (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: isOpen ? "flex-end" : "center",
+              p: 1,
+            }}
+          >
+            <IconButton sx={{ color: "#fff" }} onClick={() => setDesktopOpen(!desktopOpen)}>
+              {isOpen ? <ChevronLeftIcon /> : <MenuIcon />}
+            </IconButton>
+          </Box>
+        )}
+
+        {/* Menu */}
+        <List
+          sx={{
+            mt: isMobile ? 4 : 2,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          {dashboardDrawerRoutes.map((route, index) => {
+            const isLogout = route.action === "logout";
+
+            return (
+              <ListItem key={route.label} disablePadding sx={{ width: "100%" }}>
+                <ListItemButton
+                  component={isLogout ? "button" : NavLink}
+                  to={isLogout ? undefined : route.path}
+                  onClick={() => {
+                    if (isLogout) {
+                      logout();
+                    }
+                    if (isMobile && handleDrawerToggle) {
+                      handleDrawerToggle(); // close drawer on mobile after clicking
+                    }
+                  }}
+                  sx={{
+                    display: "flex",
+                    flexDirection: isOpen ? "row" : "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textAlign: "center",
+                    width: "100%",
+                    "&.active": {
+                      backgroundColor: "action.selected",
+                    },
+                    px: 2,
+                  }}
+                >
+                  {/* icon */}
+                  {route.icon && <route.icon />}
+
+                  {/* text */}
+                  {isOpen && (
+                    <ListItemText
+                      primary={route.label}
+                      sx={{ ml: isOpen ? 1 : 0, textAlign: "center" }}
+                    />
+                  )}
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+        </List>
+      </>
+    );
+  };
 
   return (
-    <Drawer
-      variant="permanent"
+    <Box
+      component="nav"
       sx={{
-        width: open ? drawerWidth : collapsedWidth,
-        flexShrink: 0,
-        "& .MuiDrawer-paper": {
-          width: open ? drawerWidth : collapsedWidth,
-          boxSizing: "border-box",
-          transition: "width 0.3s",
-          overflowX: "hidden",
-          backgroundColor: "#203FC7",
-          color: "#fff",
-        },
+        width: { sm: desktopOpen ? 240 : 90 },
+        flexShrink: { sm: 0 },
+        transition: "width 0.3s",
       }}
     >
-      {/* Toggle Button */}
-      <Box
+      {/* ================= MOBILE DRAWER ================= */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }} // Better open performance on mobile
         sx={{
-          display: "flex",
-          justifyContent: open ? "flex-end" : "center",
-          p: 1,
+          display: { xs: "block", sm: "none" },
+          "& .MuiDrawer-paper": {
+            boxSizing: "border-box",
+            width: 240,
+            backgroundColor: "#203FC7",
+            color: "#fff",
+          },
         }}
       >
-        <IconButton sx={{ color: "#fff" }} onClick={() => setOpen(!open)}>
-          {open ? <ChevronLeftIcon /> : <MenuIcon />}
-        </IconButton>
-      </Box>
+        {drawerContent(true)}
+      </Drawer>
 
-      {/* Menu */}
-      <List
+      {/* ================= DESKTOP DRAWER ================= */}
+      <Drawer
+        variant="permanent"
         sx={{
-          mt: 2,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 1,
+          display: { xs: "none", sm: "block" },
+          "& .MuiDrawer-paper": {
+            width: desktopOpen ? 240 : 90,
+            boxSizing: "border-box",
+            transition: "width 0.3s",
+            overflowX: "hidden",
+            backgroundColor: "#203FC7",
+            color: "#fff",
+          },
         }}
+        open
       >
-        {dashboardDrawerRoutes.map((route, index) => {
-          const isLogout = route.action === "logout";
-
-          return (
-            <ListItem key={route.label} disablePadding sx={{ width: "100%" }}>
-              <ListItemButton
-                component={isLogout ? "button" : NavLink}
-                to={isLogout ? undefined : route.path}
-                onClick={() => {
-                  if (isLogout) {
-                    logout();
-                  }
-                }}
-                sx={{
-                  display: "flex",
-                  flexDirection: open ? "row" : "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  textAlign: "center",
-                  width: "100%",
-                  "&.active": {
-                    backgroundColor: "action.selected",
-                  },
-                  px: 2,
-                }}
-              >
-                {/* icon */}
-                {route.icon && <route.icon />}
-
-                {/* text */}
-                {open && (
-                  <ListItemText
-                    primary={route.label}
-                    sx={{ ml: open ? 1 : 0, textAlign: "center" }}
-                  />
-                )}
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
-      </List>
-    </Drawer>
+        {drawerContent(false)}
+      </Drawer>
+    </Box>
   );
 }

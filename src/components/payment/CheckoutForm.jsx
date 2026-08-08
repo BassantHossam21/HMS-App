@@ -1,8 +1,7 @@
 // src/components/payment/CheckoutForm.jsx
 import React, { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import axiosClient from "../../Api/AxiosClient";
-import { useNavigate } from "react-router-dom";
+import useLandingBooking from "@/Hooks/useLandingBooking";
 
 
 // Card Element styling options
@@ -29,7 +28,7 @@ const CARD_ELEMENT_OPTIONS = {
 const CheckoutForm = ({ bookingId, amount, currency = "usd", onSuccess, onError }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const navigate = useNavigate();
+  const { payBooking } = useLandingBooking();
 
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -63,14 +62,11 @@ const CheckoutForm = ({ bookingId, amount, currency = "usd", onSuccess, onError 
         return;
       }
 
-      // 2. Send the token to the backend API exactly as required
-      const response = await axiosClient.post(`/api/v0/portal/booking/${bookingId}/pay`, {
-        token: token.id,
-      });
+      // 2. Send the token to the backend API exactly as required via custom hook
+      await payBooking(bookingId, token.id);
 
       // 3. Handle successful backend response
-      onSuccess?.(response.data);
-      navigate(`/payment-success/${bookingId}`);
+      onSuccess?.();
 
     } catch (error) {
       const message = error.response?.data?.message || error.message || "An error occurred during payment";
@@ -106,16 +102,14 @@ const CheckoutForm = ({ bookingId, amount, currency = "usd", onSuccess, onError 
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label htmlFor="card-element" style={{ fontWeight: '600', color: '#152C5B', fontSize: '15px' }}>
+        <label htmlFor="card-element" style={{ fontWeight: '600', color: '#152C5B', fontSize: '16px', marginBottom: '4px' }}>
           Card Information
         </label>
         <div style={{ 
-          padding: '16px', 
-          border: '1px solid #E5E7EB', 
-          borderRadius: '8px', 
-          backgroundColor: '#F9FAFB',
-          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)',
-          transition: 'border-color 0.2s ease-in-out'
+          padding: '18px 20px', 
+          borderRadius: '10px', 
+          backgroundColor: '#F5F6F8',
+          transition: 'all 0.2s ease-in-out'
         }}>
           <CardElement
             id="card-element"
@@ -137,14 +131,15 @@ const CheckoutForm = ({ bookingId, amount, currency = "usd", onSuccess, onError 
         style={{
           backgroundColor: (!stripe || isProcessing || !isCardComplete) ? '#B0B0B0' : '#3252DF',
           color: 'white',
-          padding: '14px',
-          borderRadius: '8px',
+          padding: '16px',
+          borderRadius: '10px',
           border: 'none',
           fontSize: '16px',
           fontWeight: 'bold',
+          marginTop: '10px',
           cursor: (!stripe || isProcessing || !isCardComplete) ? 'not-allowed' : 'pointer',
-          transition: 'background-color 0.3s',
-          boxShadow: (!stripe || isProcessing || !isCardComplete) ? 'none' : '0 4px 6px rgba(50, 82, 223, 0.2)'
+          transition: 'all 0.3s',
+          boxShadow: (!stripe || isProcessing || !isCardComplete) ? 'none' : '0 4px 10px rgba(50, 82, 223, 0.3)'
         }}
       >
         {isProcessing

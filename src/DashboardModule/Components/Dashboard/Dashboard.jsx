@@ -3,10 +3,11 @@ import { Box, Grid, Typography } from "@mui/material";
 import WorkIcon from "@mui/icons-material/Work";
 import { PieChart } from "@mui/x-charts/PieChart";
 import useDashboard from "@/Hooks/useDashboard";
+import LoadingSpinner from "@/Shared/LoadingSpinner/LoadingSpinner";
 
 export default function Dashboard() {
   // ================= Hooks =================
-  const { chartsData, getDashboardCharts } = useDashboard();
+  const { chartsData, loading, getDashboardCharts } = useDashboard();
 
   useEffect(() => {
     getDashboardCharts();
@@ -32,12 +33,14 @@ export default function Dashboard() {
   ];
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: "80px", px: { xs: 3, md: 8 }, py: { xs: 3, md: 6 } }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 4, md: 8 }, px: { xs: 2, md: 8 }, py: { xs: 3, md: 6 } }}>
+      {/* ================= LOADING SPINNER ================= */}
+      <LoadingSpinner loading={loading} />
       {/* ================= CARDS ================= */}
       <Box sx={{ flexGrow: 1, width: "100%" }}>
-        <Grid container spacing={3} sx={{ width: "100%" }}>
+        <Grid container spacing={3}>
           {topCards.map((card, idx) => (
-            <Grid size={{ xs: 12, md: 4 }} key={idx}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={idx}>
               <Box
                 sx={{
                   backgroundColor: "#1A1B1E",
@@ -81,10 +84,10 @@ export default function Dashboard() {
 
       {/* ================= PIE CHARTS ================= */}
       <Box sx={{ width: "100%" }}>
-        <Grid container spacing={5} alignItems="center" sx={{ width: "100%" }}>
+        <Grid container spacing={4} alignItems="center">
           {/* ===== LEFT: BOOKINGS ===== */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
+            <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, justifyContent: "center", alignItems: "center", gap: { xs: 4, md: 10 } }}>
               <Box sx={{ width: 220, height: 220 }}>
                 <PieChart
                   series={[
@@ -131,9 +134,8 @@ export default function Dashboard() {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                maxWidth: 320,
-                ml: "auto",
-                mr: 5,
+                maxWidth: { xs: "100%", md: 320 },
+                mx: "auto",
               }}
             >
               {/* Thin Donut Chart */}

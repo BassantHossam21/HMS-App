@@ -1,34 +1,29 @@
 import { useState, useEffect } from "react";
 import axiosClient from "../Api/AxiosClient";
 
-
-export default function useUsers(page, rowsPerPage) {
+export default function useUsers() {
   const [users, setUsers] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Only fetch list if pagination params are provided
+  //===================Get All Users===================
+  const getAllUsers = async (page, rowsPerPage) => {
     if (page === undefined || rowsPerPage === undefined) return;
-    
-    const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        const res = await axiosClient.get(
-          `/api/v0/admin/users?page=${page + 1}&size=${rowsPerPage}`
-        );
-        console.log(res.data.data);
-        setUsers(res.data.data.users);
-        setTotalCount(res.data.data.totalCount);
-      } catch (err) {
-        console.error("Error fetching users:", err);
-      }
-      setLoading(false);
-    };
 
-    fetchUsers();
-  }, [page, rowsPerPage]);
+    setLoading(true);
+    try {
+      const res = await axiosClient.get(
+        `/api/v0/admin/users?page=${page + 1}&size=${rowsPerPage}`,
+      );
+      setUsers(res.data.data.users);
+      setTotalCount(res.data.data.totalCount);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+    setLoading(false);
+  };
 
+  //===================Get User Profile===================
   const getUserProfile = async (id) => {
     try {
       const res = await axiosClient.get(`/api/v0/admin/users/${id}`);
@@ -39,5 +34,5 @@ export default function useUsers(page, rowsPerPage) {
     }
   };
 
-  return { users, totalCount, loading, getUserProfile };
+  return { users, totalCount, loading, getAllUsers, getUserProfile };
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -7,25 +7,32 @@ import {
   TableHead,
   TableRow,
   Paper,
-  CircularProgress,
   Avatar,
   Typography,
   TableFooter,
   TablePagination,
   Box,
-  Grid,
-  IconButton,
 } from "@mui/material";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import useUsers from "@/Hooks/useUsers";
+import LoadingSpinner from "@/Shared/LoadingSpinner/LoadingSpinner";
 
+// ============================== 1. COMPONENT ============================
 export default function UsersList() {
+  // --- States ---
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const { users, totalCount, loading } = useUsers(page, rowsPerPage);
+  // --- Custom Hooks & Data ---
+  const { users, totalCount, loading, getAllUsers } = useUsers();
 
+  // --- API Calls ---
+  useEffect(() => {
+    getAllUsers(page, rowsPerPage);
+  }, [page, rowsPerPage]);
+
+  // ============================== 2. EVENT HANDLERS ============================
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -35,23 +42,41 @@ export default function UsersList() {
     setPage(0);
   };
 
+  // ============================== 3. RENDER ============================
   return (
     <>
+      {/* ================= FULL SCREEN LOADING ================= */}
+      <LoadingSpinner loading={loading} />
+
       {/* ================= PAGE HEADER SECTION ================= */}
-      <Box>
-        <Grid container>
-          <Grid item xs={12}>
-            <Typography variant="h6">UsersList Table Details </Typography>
-            <Typography variant="body2" color="textPrimary">
-              You can check all details
-            </Typography>
-          </Grid>
-        </Grid>
+      <Box
+        sx={{
+          mb: 4,
+          mt: 2,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: "bold", color: "#1F263E" }}
+          >
+            Users Table Details
+          </Typography>
+          <Typography variant="body1" sx={{ color: "#6c757d", mt: 0.5 }}>
+            You can check all details
+          </Typography>
+        </Box>
       </Box>
 
       {/* ================= TABLE CONTAINER ================= */}
-      <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 3 }}>
-        <Table>
+      <TableContainer
+        component={Paper}
+        sx={{ boxShadow: 3, borderRadius: "12px", overflowX: "auto" }}
+      >
+        <Table sx={{ minWidth: 1000 }}>
           {/* ================= TABLE HEADERS ================= */}
           <TableHead
             sx={{
@@ -95,13 +120,7 @@ export default function UsersList() {
 
           {/* ================= TABLE BODY (DATA) ================= */}
           <TableBody sx={{ "& .MuiTableCell-body": { color: "#3A3A3D" } }}>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={9} align="center">
-                  <CircularProgress />
-                </TableCell>
-              </TableRow>
-            ) : users.length > 0 ? (
+            {users.length > 0 ? (
               users.map((user) => (
                 <TableRow
                   key={user._id}
@@ -149,13 +168,13 @@ export default function UsersList() {
                   </TableCell>
                 </TableRow>
               ))
-            ) : (
+            ) : !loading ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={9} align="center">
                   <Typography>No users found</Typography>
                 </TableCell>
               </TableRow>
-            )}
+            ) : null}
           </TableBody>
 
           {/* ================= TABLE FOOTER (PAGINATION) ================= */}

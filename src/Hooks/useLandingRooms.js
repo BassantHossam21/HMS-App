@@ -13,6 +13,7 @@ export default function useLandingRooms() {
   const [totalCount, setTotalCount] = useState(0);
   const [roomDetails, setRoomDetails] = useState(null);
 
+  //========================== fetching rooms with filters ==========================
   const fetchRooms = async (currentPage) => {
     setLoading(true);
     try {
@@ -37,6 +38,7 @@ export default function useLandingRooms() {
     }
   };
 
+  //========================== fetching room details by ID ==========================
   const getRoomDetailsById = async (roomId) => {
     try {
       const response = await axiosClient.get(`/api/v0/portal/rooms/${roomId}`);

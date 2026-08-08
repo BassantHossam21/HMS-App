@@ -73,7 +73,6 @@ function App() {
         { path: "register", element: <Register /> },
         { path: "forgetpass", element: <ForgetPassword /> },
         { path: "resetpass", element: <ResetPassword /> },
-        { path: "changepass", element: <ChangePassword /> },
         { path: "dashboard", element: <Dashboard /> },
       ],
     },
@@ -109,6 +108,10 @@ function App() {
         {
           path: "ads",
           element: <AdsList />,
+        },
+        {
+          path: "changepass",
+          element: <ChangePassword />,
         },
       ],
     },

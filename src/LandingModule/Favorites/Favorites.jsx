@@ -1,119 +1,108 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
+  Grid,
   Card,
   CardMedia,
+  Pagination,
+  PaginationItem,
+  Stack,
   Breadcrumbs,
-  Link,
+  Link as MuiLink,
+  Container,
 } from "@mui/material";
+import { Link } from "react-router-dom";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import LoadingSpinner from "../../Shared/LoadingSpinner/LoadingSpinner";
+
+import placeholderimg from "../../assets/images/hotals1 (1).png";
 import useFavorites from "../../Hooks/useFavorites";
 
 export default function Favorites() {
-  const { data: favorites, removeFavorite } = useFavorites();
+  const { data: favorites, removeFavorite, loading } = useFavorites();
+  
+  // Client-side pagination logic
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalCount = favorites ? favorites.length : 0;
+  const startIndex = (page - 1) * itemsPerPage;
+  const currentFavorites = favorites ? favorites.slice(startIndex, startIndex + itemsPerPage) : [];
 
+  if (loading) return <LoadingSpinner loading={loading} />;
+
+  // ================= MAIN UI =================
   return (
-    <Box sx={{ bgcolor: "#fff", minHeight: "100vh", pb: 8 }}>
-      {/* الحاوية الرئيسية مع هوامش جانبية مناسبة للتصميم */}
-      <Box
-        sx={{
-          px: { xs: 2, md: 10 },
-          pt: 4,
-        }}
-      >
-        {/* 1. مسار الصفحة (Breadcrumbs) */}
-        <Breadcrumbs
-          separator="/"
-          aria-label="breadcrumb"
-          sx={{ mb: 5, fontSize: "16px", fontFamily: "'Poppins', sans-serif" }}
-        >
-          <Link underline="hover" color="gray" href="/">
-            Home
-          </Link>
-          <Typography color="#152C5B" sx={{ fontWeight: 500 }}>
-            Favorites
+    <Box sx={{ backgroundColor: "#fff", minHeight: "100vh", py: { xs: 2, md: 4 } }}>
+      <Container maxWidth="xl">
+        
+        {/* ================= HEADER AREA ================= */}
+        <Box sx={{ position: "relative", mb: 5, textAlign: "center" }}>
+          
+          {/* 1. Breadcrumbs Navigation */}
+          <Breadcrumbs
+            separator="/"
+            aria-label="breadcrumb"
+            sx={{
+              position: { md: "absolute" },
+              left: 0,
+              top: "50%",
+              transform: { md: "translateY(-50%)" },
+              justifyContent: { xs: "center", md: "flex-start" },
+              display: "flex",
+              mb: { xs: 2, md: 0 },
+            }}
+          >
+            <MuiLink
+              component={Link}
+              to="/"
+              color="#B0B0B0"
+              underline="hover"
+              sx={{ fontSize: "14px", fontWeight: 500 }}
+            >
+              Home
+            </MuiLink>
+            <Typography color="#B0B0B0" sx={{ fontSize: "14px", fontWeight: 500 }}>
+              Favorites
+            </Typography>
+          </Breadcrumbs>
+
+          {/* 2. Main Page Title */}
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: 800, color: "#152C5B" }}
+          >
+            Your Favorites
           </Typography>
-        </Breadcrumbs>
+        </Box>
 
-        {/* 2. العنوان الرئيسي */}
+        {/* ================= SUBTITLE ================= */}
         <Typography
-          variant="h4"
-          align="center"
-          sx={{
-            fontWeight: 700,
-            color: "#152C5B",
-            mb: 6,
-            fontFamily: "'Poppins', sans-serif",
-          }}
-        >
-          Your Favorites
-        </Typography>
-
-        {/* 3. عنوان القسم */}
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 600,
-            color: "#152C5B",
-            mb: 4,
-            fontFamily: "'Poppins', sans-serif",
-          }}
+          variant="h6"
+          sx={{ fontWeight: 600, color: "#152C5B", mb: 3 }}
         >
           Your Rooms
         </Typography>
 
-        {/* 4. شبكة عرض الغرف */}
-        {favorites && favorites.length > 0 ? (
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, 1fr)",
-                md: "repeat(3, 1fr)",
-              },
-              gap: 4,
-            }}
-          >
-            {favorites.map((favorite) => (
-              <Card
-                key={favorite._id}
-                sx={{
-                  borderRadius: "20px",
-                  boxShadow: "none",
-                  position: "relative",
-                  cursor: "pointer",
-                  aspectRatio: "16/10",
-                  bgcolor: "#fff",
-                  overflow: "hidden",
-                }}
-              >
-                <Box
+        {/* ================= ROOMS GRID ================= */}
+        {totalCount > 0 ? (
+          <Grid container spacing={3}>
+            {currentFavorites.map((favorite) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={favorite._id}>
+                
+                {/* ================= ROOM CARD ================= */}
+                <Card
                   sx={{
-                    width: "100%",
-                    height: "100%",
-                    overflow: "hidden",
+                    borderRadius: "16px",
                     position: "relative",
+                    height: 260,
+                    boxShadow: "none",
+                    overflow: "hidden",
+                    cursor: "pointer",
                   }}
                 >
-                  <CardMedia
-                    component="img"
-                    image={
-                      favorite.images?.[0] ||
-                      `https://placehold.co/600x400?text=${favorite.name}`
-                    }
-                    alt={favorite.name}
-                    sx={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                      transition: "transform 0.5s ease",
-                      "&:hover": { transform: "scale(1.08)" },
-                    }}
-                  />
-
-                  {/* أيقونة القلب في المنتصف */}
+                  
+                  {/* --- A. Heart Remove Icon --- */}
                   <Box
                     onClick={(e) => {
                       e.stopPropagation();
@@ -121,53 +110,99 @@ export default function Favorites() {
                     }}
                     sx={{
                       position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      zIndex: 2,
+                      cursor: "pointer",
+                      bgcolor: "rgba(255, 255, 255, 0.3)",
+                      backdropFilter: "blur(4px)",
+                      borderRadius: "50%",
+                      p: 1.5,
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      pointerEvents: "none", // السماح بالضغط على الكارت نفسه إذا لزم الأمر
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translate(-50%, -50%) scale(1.2)",
+                        bgcolor: "rgba(255, 255, 255, 0.5)",
+                      },
                     }}
                   >
-                    <Box
-                      sx={{
-                        bgcolor: "rgba(255, 255, 255, 0.4)",
-                        backdropFilter: "blur(4px)",
-                        borderRadius: "50%",
-                        p: 1.5,
-                        display: "flex",
-                        boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-                        pointerEvents: "auto", // تفعيل الضغط على الأيقونة
-                        transition: "all 0.3s ease",
-                        "&:hover": {
-                          transform: "scale(1.2)",
-                          bgcolor: "rgba(255, 255, 255, 0.6)",
-                        },
-                      }}
-                    >
-                      <FavoriteIcon
-                        sx={{ color: "#FF498B", fontSize: "2rem" }}
-                      />
-                    </Box>
+                    <FavoriteIcon sx={{ color: "#fff", fontSize: "2rem" }} />
                   </Box>
-                </Box>
-              </Card>
+
+                  {/* --- B. Room Background Image --- */}
+                  <CardMedia
+                    component="img"
+                    height="100%"
+                    image={
+                      favorite.images?.length > 0 ? favorite.images[0] : placeholderimg
+                    }
+                    alt={favorite.name || favorite.roomNumber}
+                    sx={{ objectFit: "cover" }}
+                  />
+
+                  {/* --- C. Bottom Gradient & Details --- */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      p: 2,
+                      width: "100%",
+                      background:
+                        "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))",
+                      color: "white",
+                    }}
+                  >
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      {favorite.roomNumber ? `Room ${favorite.roomNumber}` : "Ocean Land"}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#e5e7eb" }}>
+                      {favorite.capacity
+                        ? `Capacity: ${favorite.capacity}`
+                        : "Bandung, Indonesia"}
+                    </Typography>
+                  </Box>
+
+                </Card>
+              </Grid>
             ))}
-          </Box>
+          </Grid>
         ) : (
           <Box sx={{ textAlign: "center", py: 10 }}>
             <Typography
               variant="h6"
-              color="textSecondary"
-              sx={{ fontFamily: "'Poppins', sans-serif" }}
+              sx={{ fontWeight: 500, color: "#152C5B" }}
             >
               You haven't added any favorites yet.
             </Typography>
           </Box>
         )}
-      </Box>
+
+        {/* ================= PAGINATION ================= */}
+        {totalCount > 0 && (
+          <Stack spacing={2} sx={{ mt: 8, mb: 4, alignItems: "center" }}>
+            <Pagination
+              count={Math.ceil(totalCount / itemsPerPage) || 1}
+              page={page}
+              onChange={(e, value) => setPage(value)}
+              variant="outlined"
+              shape="rounded"
+              className="rooms-pagination"
+              renderItem={(item) => (
+                <PaginationItem
+                  slots={{
+                    previous: () => <span style={{ padding: '0 8px' }}>Previous</span>,
+                    next: () => <span style={{ padding: '0 8px' }}>Next</span>
+                  }}
+                  {...item}
+                />
+              )}
+            />
+          </Stack>
+        )}
+
+      </Container>
     </Box>
   );
 }

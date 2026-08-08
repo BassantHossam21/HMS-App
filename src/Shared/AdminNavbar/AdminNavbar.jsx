@@ -10,17 +10,18 @@ import Badge from "@mui/material/Badge";
 import SearchIcon from "@mui/icons-material/Search";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import MenuIcon from "@mui/icons-material/Menu";
 import { AuthContext } from "@/Context/AuthContext";
 import useUsers from "@/Hooks/useUsers";
+import { useNavigate } from "react-router-dom";
 
-const settings = ["Profile", "Dashboard", "Logout"];
-
-export default function AdminNavbar() {
+export default function AdminNavbar({ handleDrawerToggle }) {
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const [profileData, setProfileData] = React.useState(null);
   
-  const { user } = React.useContext(AuthContext);
+  const { user, logout } = React.useContext(AuthContext);
   const { getUserProfile } = useUsers();
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     if (user?._id) {
@@ -40,24 +41,36 @@ export default function AdminNavbar() {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        p: 1.5,
-        px: 3,
-        mt: 3,
-        mb: 4,
+        p: { xs: 1, sm: 1.5 },
+        px: { xs: 1.5, sm: 3 },
+        mt: { xs: 1.5, sm: 3 },
+        mb: { xs: 2, sm: 4 },
       }}
     >
-      {/* ================= LEFT: SEARCH BAR ================= */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          backgroundColor: "#fff",
-          borderRadius: "24px",
-          px: 2,
-          py: 0.5,
-          width: { xs: "200px", md: "350px" },
-        }}
-      >
+      {/* ================= LEFT: HAMBURGER & SEARCH ================= */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 2 } }}>
+        {/* Mobile Hamburger Menu */}
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          onClick={handleDrawerToggle}
+          sx={{ display: { sm: "none" }, color: "#203FC7", p: 0 }}
+        >
+          <MenuIcon sx={{ fontSize: "28px" }} />
+        </IconButton>
+
+        {/* Search Bar */}
+        <Box
+          sx={{
+            display: { xs: "none", sm: "flex" },
+            alignItems: "center",
+            backgroundColor: "#fff",
+            borderRadius: "24px",
+            px: { xs: 1, sm: 2 },
+            py: 0.5,
+            width: { xs: "130px", sm: "200px", md: "350px" },
+          }}
+        >
         <SearchIcon sx={{ color: "#9ca3af", mr: 1 }} />
         <InputBase
           placeholder="Search Here"
@@ -65,9 +78,11 @@ export default function AdminNavbar() {
         />
       </Box>
 
+      </Box>
+
       {/* ================= RIGHT: USER & NOTIFICATIONS ================= */}
       <Box
-        sx={{ display: "flex", alignItems: "center", gap: { xs: 2, md: 4 } }}
+        sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 2, md: 4 } }}
       >
         {/* User Info */}
         <Box
@@ -86,6 +101,7 @@ export default function AdminNavbar() {
           />
           <Typography
             sx={{
+              display: { xs: "none", sm: "block" }, // Hidden on mobile
               fontWeight: 600,
               fontSize: "14px",
               color: "#111",
@@ -104,11 +120,22 @@ export default function AdminNavbar() {
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           transformOrigin={{ vertical: "top", horizontal: "right" }}
         >
-          {settings.map((setting) => (
-            <MenuItem key={setting} onClick={() => setAnchorElUser(null)}>
-              {setting}
-            </MenuItem>
-          ))}
+          <MenuItem
+            onClick={() => {
+              setAnchorElUser(null);
+              navigate("/dashboard/changepass");
+            }}
+          >
+            Change Password
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setAnchorElUser(null);
+              if (logout) logout();
+            }}
+          >
+            Logout
+          </MenuItem>
         </Menu>
 
         {/* Notifications */}

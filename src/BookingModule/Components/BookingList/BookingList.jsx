@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+// ==============================
+// 1. IMPORTS
+// ==============================
+import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Grid,
-  Typography,
   Table,
   TableBody,
   TableCell,
@@ -10,105 +10,186 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Typography,
+  TableFooter,
+  TablePagination,
+  Box,
 } from "@mui/material";
-import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useBookingApi } from "@/Hooks/useBooking";
+import LoadingSpinner from "@/Shared/LoadingSpinner/LoadingSpinner";
 
+// ==============================
+// 2. COMPONENT
+// ==============================
 export default function BookingList() {
-  const { loading, data, getBookings } = useBookingApi();
+  // --- States ---
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  // --- Custom Hooks & Data ---
+  const { loading, data, totalCount, getBookings } = useBookingApi();
+
+  // --- API Calls ---
   useEffect(() => {
-    getBookings();
-  }, []);
+    getBookings(page, rowsPerPage);
+  }, [page, rowsPerPage]);
 
+  // ==============================
+  // 3. EVENT HANDLERS
+  // ==============================
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // ==============================
+  // 4. RENDER
+  // ==============================
   return (
-    <Box>
-      <Grid container>
-        <Grid item xs={12}>
-          <Typography variant="h6">Booking Table Details </Typography>
-          <Typography variant="body2" color="textPrimary">
+    <>
+      {/* ================= FULL SCREEN LOADING ================= */}
+      <LoadingSpinner loading={loading} />
+
+      {/* ================= PAGE HEADER SECTION ================= */}
+      <Box
+        sx={{
+          mb: 4,
+          mt: 2,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: "bold", color: "#1F263E" }}
+          >
+            Booking Table Details
+          </Typography>
+          <Typography variant="body1" sx={{ color: "#6c757d", mt: 0.5 }}>
             You can check all details
           </Typography>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
-      <Box sx={{ mt: 5, overflowY: "hidden" }}>
-        <TableContainer component={Paper}>
-          {" "}
-          {/* غير Table لـ Paper */}
-          <Table aria-label="striped table">
-            <TableHead sx={{ borderRadius: 25, p: 3 }}>
-              <TableRow sx={{ backgroundColor: "#E2E5EB", borderRadius: 5 }}>
-                <TableCell
+      {/* ================= TABLE CONTAINER ================= */}
+      <TableContainer
+        component={Paper}
+        sx={{ boxShadow: 3, borderRadius: "12px", overflowX: "auto" }}
+      >
+        <Table sx={{ minWidth: 1000 }}>
+          {/* ================= TABLE HEADERS ================= */}
+          <TableHead
+            sx={{
+              backgroundColor: "#E2E5EB",
+              "& .MuiTableCell-root": {
+                color: "#1F263E",
+                fontWeight: "600",
+                fontSize: "16px",
+                padding: "20px 16px",
+              },
+            }}
+          >
+            <TableRow sx={{ height: "80px" }}>
+              {[
+                "Room Number",
+                "Price",
+                "Start Date",
+                "End Date",
+                "User",
+                "Actions",
+              ].map((headerName) => (
+                <TableCell key={headerName}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    {headerName}
+                    <UnfoldMoreIcon
+                      htmlColor="#203FC7"
+                      sx={{
+                        fontSize: "26px",
+                        stroke: "#203FC7",
+                        strokeWidth: 0.4,
+                      }}
+                    />
+                  </Box>
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+
+          {/* ================= TABLE BODY (DATA) ================= */}
+          <TableBody sx={{ "& .MuiTableCell-body": { color: "#3A3A3D" } }}>
+            {data?.booking?.length > 0 ? (
+              data.booking.map((item) => (
+                <TableRow
+                  key={item._id}
                   sx={{
-                    color: "#000",
-                    fontWeight: "bold",
-                    p: 3,
+                    "&:hover": { backgroundColor: "#F8F9FB" },
+                    transition: "0.3s",
                   }}
                 >
-                  room Number
-                </TableCell>
-                <TableCell sx={{ color: "#000", fontWeight: "bold" }}>
-                  Price
-                </TableCell>
-                <TableCell
-                  sx={{ color: "#000", fontWeight: "bold" }}
-                  align="center"
-                >
-                  Start Date
-                </TableCell>
-                <TableCell
-                  sx={{ color: "#000", fontWeight: "bold" }}
-                  align="center"
-                >
-                  End Date
-                </TableCell>
-                <TableCell
-                  sx={{ color: "#000", fontWeight: "bold" }}
-                  align="center"
-                >
-                  User
-                </TableCell>
-                <TableCell
-                  sx={{ color: "#000", fontWeight: "bold" }}
-                  align="center"
-                >
-                  Action
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody
-              sx={{
-                "& tr:nth-of-type(odd)": {
-                  backgroundColor: "#fff",
-                },
-                "& tr:nth-of-type(even)": {
-                  backgroundColor: "#eeeeeeff",
-                },
-              }}
-            >
-              {data?.booking?.map((item) => (
-                <TableRow key={item._id}>
-                  <TableCell sx={{ p: 3 }} component="th" scope="row">
+                  <TableCell>
                     {item.room?.roomNumber ? item.room?.roomNumber : "N/A"}
                   </TableCell>
-                  <TableCell>{item.totalPrice}</TableCell>
-                  <TableCell align="center">
+                  <TableCell>${item.totalPrice}</TableCell>
+                  <TableCell>
                     {new Date(item.startDate).toLocaleDateString()}
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell>
                     {new Date(item.endDate).toLocaleDateString()}
                   </TableCell>
-                  <TableCell align="center">{item.user?.userName}</TableCell>
-                  <TableCell align="center">
-                    <RemoveRedEyeIcon sx={{ color: "#203FC7", fontSize: 15 }} />
+                  <TableCell>{item.user?.userName}</TableCell>
+
+                  {/* Actions (View Button) */}
+                  <TableCell>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        color: "#203FC7",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <VisibilityIcon sx={{ fontSize: "20px" }} />
+                      <Typography sx={{ fontSize: "14px", fontWeight: "600" }}>
+                        View
+                      </Typography>
+                    </Box>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-    </Box>
+              ))
+            ) : !loading ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  <Typography>No bookings found</Typography>
+                </TableCell>
+              </TableRow>
+            ) : null}
+          </TableBody>
+
+          {/* ================= TABLE FOOTER (PAGINATION) ================= */}
+          <TableFooter>
+            <TableRow>
+              <TablePagination
+                count={totalCount || 0}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={[5, 10, 20, 50]}
+                labelRowsPerPage="Showing:"
+              />
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </TableContainer>
+    </>
   );
 }

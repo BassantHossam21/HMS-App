@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import headerImg from "../../assets/images/Header.png";
+import headerImg from "@/assets/images/Header.png";
 
 export default function Header() {
   const [capacity, setCapacity] = useState(2);
@@ -27,11 +27,10 @@ export default function Header() {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ flexGrow: 1, p: { xs: 2, sm: 3, md: 5 } }}>
-        <Grid container spacing={8} alignItems="stretch">
-          {/* ===== LEFT CONTENT ===== */}
+        <Grid container spacing={{ xs: 4, md: 8 }} alignItems="stretch">
+          {/* =================== LEFT CONTENT =================== */}
           <Grid
-            item
-            size={6}
+            size={{ xs: 12, md: 6 }}
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -69,8 +68,8 @@ export default function Header() {
                 Start Booking
               </Typography>
               <Grid container spacing={3}>
-                {/* ===== Pick a Date ===== */}
-                <Grid item xs={12} sm={6}>
+                {/* ================== Pick a Date ================== */}
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography sx={{ mb: 1, fontWeight: 500 }}>
                     Pick a Date
                   </Typography>
@@ -127,8 +126,8 @@ export default function Header() {
                   </Box>
                 </Grid>
 
-                {/* ===== Capacity ===== */}
-                <Grid item size={6}>
+                {/* =================== Capacity ==================== */}
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Typography sx={{ mb: 1, fontWeight: 500 }}>
                     Capacity
                   </Typography>
@@ -197,14 +196,16 @@ export default function Header() {
                 fontWeight: 500,
                 textTransform: "none",
                 borderRadius: 1,
+                width: { xs: '100%', sm: 'auto' },
+                mt: { xs: 2, sm: 0 },
               }}
             >
               Explore
             </Button>
           </Grid>
 
-          {/* ===== RIGHT IMAGE ===== */}
-          <Grid item size={6} sx={{ display: { xs: "none", md: "flex" } }}>
+          {/* ==================== RIGHT IMAGE ==================== */}
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: { xs: "none", md: "flex" } }}>
             <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
               <Box
                 sx={{
