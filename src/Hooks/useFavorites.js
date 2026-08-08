@@ -6,15 +6,19 @@ import { useAuthAction } from "../Context/AuthActionContext";
 export default function useFavorites() {
   const { requireAuthAction } = useAuthAction();
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   //============= Get favorite rooms ==============
   const getFavorites = async () => {
+    setLoading(true);
     try {
       let response = await axiosClient.get(`/api/v0/portal/favorite-rooms`);
       console.log("FULL FAVORITES RESPONSE:", response.data.data);
       setData(response.data.data.favoriteRooms[0]?.rooms || []);
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,8 +67,10 @@ export default function useFavorites() {
     const token = localStorage.getItem("access_token");
     if (token) {
       getFavorites();
+    } else {
+      setLoading(false);
     }
   }, []);
 
-  return { addFavorite, removeFavorite, data };
+  return { addFavorite, removeFavorite, data, loading };
 }

@@ -14,12 +14,15 @@ export function AuthContextProvider({ children }) {
         const cleanToken = token.replace("Bearer ", "");
         const decoded = jwtDecode(cleanToken);
         setUser(decoded); // role، id، أي بيانات من token
+        return decoded;
       } catch (err) {
         console.error("Invalid token", err);
         localStorage.removeItem("access_token");
         setUser(null);
+        return null;
       }
     }
+    return null;
   };
 
   const logout = () => {

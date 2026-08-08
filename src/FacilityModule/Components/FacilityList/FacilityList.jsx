@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+// ==============================
+// 1. IMPORTS
+// ==============================
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Table,
@@ -16,17 +19,30 @@ import {
   Dialog,
   DialogContent,
   TextField,
+  TableFooter,
+  TablePagination,
+  CircularProgress,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import CloseIcon from "@mui/icons-material/Close";
-import useFacilities from "../../../Hooks/useFacilities";
-import deleteImg from "../../../assets/images/Delete.png";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+
+import useFacilities from "@/Hooks/useFacilities";
+import LoadingSpinner from "@/Shared/LoadingSpinner/LoadingSpinner";
+import DeleteConfirmation from "@/Shared/delete confirmation/delete confirmation";
 import { useForm } from "react-hook-form";
 
+// ==============================
+// 2. COMPONENT
+// ==============================
 export default function FacilityList() {
+  // --- States ---
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedFacility, setSelectedFacility] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isFacilityDialogOpen, setIsFacilityDialogOpen] = useState(false);
@@ -34,8 +50,31 @@ export default function FacilityList() {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
-  let { data, deleteFacility, loading, addFacility, updateFacility } =
-    useFacilities();
+  // --- Custom Hooks & Data ---
+  const {
+    data,
+    totalCount,
+    loading,
+    getFacilities,
+    deleteFacility,
+    addFacility,
+    updateFacility,
+  } = useFacilities();
+
+  // --- API Calls ---
+  useEffect(() => {
+    getFacilities(page, rowsPerPage);
+  }, [page, rowsPerPage, getFacilities]);
+
+  // --- Handlers for Pagination ---
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const {
     register,
@@ -44,6 +83,9 @@ export default function FacilityList() {
     formState: { errors },
   } = useForm();
 
+  // ==============================
+  // 3. EVENT HANDLERS
+  // ==============================
   const handleClick = (event, facility) => {
     setAnchorEl(event.currentTarget);
     setSelectedFacility(facility);
@@ -51,25 +93,32 @@ export default function FacilityList() {
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
   };
 
-  //========================Delete Dialog===================================
+  // --- Delete Dialog ---
   const handleOpenDeleteDialog = () => {
-    setIsDeleteDialogOpen(true);
     handleCloseMenu();
+    setTimeout(() => {
+      setIsDeleteDialogOpen(true);
+    }, 0);
   };
+  
   const handleCloseDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
     setSelectedFacility(null);
   };
+  
   const confirmDelete = async () => {
     if (selectedFacility) {
-      await deleteFacility(selectedFacility._id);
+      await deleteFacility(selectedFacility._id, page, rowsPerPage);
       handleCloseDeleteDialog();
     }
   };
 
-  //========================Facility Dialog (Add / Update)===================================
+  // --- Facility Dialog (Add / Update) ---
   const handleOpenFacilityDialog = (mode, facility = null) => {
     setMode(mode);
     if (mode === "update" && facility) {
@@ -77,8 +126,10 @@ export default function FacilityList() {
     } else {
       reset({ name: "" });
     }
-    setIsFacilityDialogOpen(true);
     handleCloseMenu();
+    setTimeout(() => {
+      setIsFacilityDialogOpen(true);
+    }, 0);
   };
 
   const handleCloseFacilityDialog = () => {
@@ -87,33 +138,48 @@ export default function FacilityList() {
     setSelectedFacility(null);
   };
 
-  const onSubmitFacility = async (data) => {
+  const onSubmitFacility = async (formData) => {
     if (mode === "add") {
-      await addFacility(data.name);
+      await addFacility(formData.name, 0, rowsPerPage);
+      setPage(0);
     } else {
-      await updateFacility(selectedFacility._id, { name: data.name });
+      await updateFacility(selectedFacility._id, { name: formData.name }, page, rowsPerPage);
     }
     handleCloseFacilityDialog();
   };
 
+  // ==============================
+  // 4. RENDER
+  // ==============================
   return (
     <Box>
+      {/* ================= FULL SCREEN LOADING ================= */}
+      <LoadingSpinner loading={loading} />
+
+      {/* ================= PAGE HEADER SECTION ================= */}
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
-          mb: 10,
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: { xs: 2, sm: 0 },
+          mb: 4,
+          mt: 2,
         }}
       >
         <Box>
           <Typography
-            variant="h6"
-            sx={{ fontWeight: "600", color: "#1F263E", fontSize: "1.25rem" }}
+            variant="h5"
+            sx={{
+              fontWeight: "bold",
+              color: "#1F263E",
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
+            }}
           >
             Facilities Table Details
           </Typography>
-          <Typography variant="body2" sx={{ color: "#3A3A3D", mt: 0.5 }}>
+          <Typography variant="body1" sx={{ color: "#6c757d", mt: 0.5 }}>
             You can check all details
           </Typography>
         </Box>
@@ -124,10 +190,11 @@ export default function FacilityList() {
             backgroundColor: "#203FC7",
             borderRadius: "8px",
             textTransform: "none",
-            px: 4,
+            px: { xs: 2, sm: 4 },
             py: 1.2,
             fontWeight: "500",
             boxShadow: "none",
+            width: { xs: "100%", sm: "auto" },
             "&:hover": {
               backgroundColor: "#1831a3",
               boxShadow: "none",
@@ -138,66 +205,106 @@ export default function FacilityList() {
         </Button>
       </Box>
 
+      {/* ================= TABLE CONTAINER ================= */}
       <TableContainer
         component={Paper}
-        sx={{
-          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
-          borderRadius: "15px",
-          overflow: "hidden",
-          border: "none",
-        }}
+        sx={{ boxShadow: 3, borderRadius: "12px", overflowX: "auto" }}
       >
-        <Table>
-          <TableHead>
-            <TableRow
-              sx={{
-                backgroundColor: "#E2E5EB",
-                "& th": {
-                  border: "none",
-                  fontWeight: "bold",
-                  color: "#1F263E",
-                  py: 3,
-                },
-              }}
-            >
-              <TableCell>Name</TableCell>
-              <TableCell>CreatedAt</TableCell>
-              <TableCell>CreatedBy</TableCell>
-              <TableCell>updatedAt</TableCell>
-              <TableCell></TableCell>
-              <TableCell></TableCell>
-              <TableCell align="right">Actions</TableCell>
+        <Table sx={{ minWidth: 1000 }}>
+          {/* ================= TABLE HEADERS ================= */}
+          <TableHead
+            sx={{
+              backgroundColor: "#E2E5EB",
+              "& .MuiTableCell-root": {
+                color: "#1F263E",
+                fontWeight: "600",
+                fontSize: "16px",
+                padding: "20px 16px",
+              },
+            }}
+          >
+            <TableRow sx={{ height: "80px" }}>
+              {["Name", "Created At", "Created By", "Updated At", "Actions"].map(
+                (headerName) => (
+                  <TableCell
+                    key={headerName}
+                    align={headerName === "Actions" ? "right" : "left"}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        justifyContent:
+                          headerName === "Actions" ? "flex-end" : "flex-start",
+                      }}
+                    >
+                      {headerName}
+                      <UnfoldMoreIcon
+                        htmlColor="#203FC7"
+                        sx={{
+                          fontSize: "26px",
+                          stroke: "#203FC7",
+                          strokeWidth: 0.4,
+                        }}
+                      />
+                    </Box>
+                  </TableCell>
+                )
+              )}
             </TableRow>
           </TableHead>
-          <TableBody>
-            {data.map((facility, index) => (
-              <TableRow
-                key={facility._id || facility.id}
-                sx={{
-                  backgroundColor: index % 2 === 0 ? "#FFFFFF" : "#F8F9FB",
-                  "& td": { border: "none", py: 2, color: "#3A3A3D" },
-                }}
-              >
-                <TableCell component="th" scope="row" sx={{ border: "none" }}>
-                  {facility.name}
-                </TableCell>
-                <TableCell>
-                  {new Date(facility.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>{facility.createdBy?.userName}</TableCell>
-                <TableCell>
-                  {new Date(facility.updatedAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>{facility.description}</TableCell>
-                <TableCell>{facility.status}</TableCell>
-                <TableCell align="right">
-                  <IconButton onClick={(e) => handleClick(e, facility)}>
-                    <MoreHorizIcon />
-                  </IconButton>
+
+          {/* ================= TABLE BODY (DATA) ================= */}
+          <TableBody sx={{ "& .MuiTableCell-body": { color: "#3A3A3D" } }}>
+            {data?.length > 0 ? (
+              data.map((facility, index) => (
+                <TableRow
+                  key={facility._id || facility.id}
+                  sx={{
+                    "&:hover": { backgroundColor: "#F8F9FB" },
+                    transition: "0.3s",
+                    backgroundColor: index % 2 === 0 ? "#FFFFFF" : "#F8F9FB",
+                  }}
+                >
+                  <TableCell sx={{ fontWeight: "500" }}>{facility.name}</TableCell>
+                  <TableCell>
+                    {new Date(facility.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>{facility.createdBy?.userName || "N/A"}</TableCell>
+                  <TableCell>
+                    {new Date(facility.updatedAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton onClick={(e) => handleClick(e, facility)}>
+                      <MoreHorizIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : !loading ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  <Typography>No facilities found</Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : null}
           </TableBody>
+
+          {/* ================= TABLE FOOTER (PAGINATION) ================= */}
+          <TableFooter>
+            <TableRow>
+              <TablePagination
+                count={totalCount || 0}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={[5, 10, 20, 50]}
+                labelRowsPerPage="Showing:"
+              />
+            </TableRow>
+          </TableFooter>
         </Table>
       </TableContainer>
 
@@ -206,6 +313,8 @@ export default function FacilityList() {
         anchorEl={anchorEl}
         open={open}
         onClose={handleCloseMenu}
+        disableScrollLock
+        disableRestoreFocus
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
         PaperProps={{
@@ -229,9 +338,7 @@ export default function FacilityList() {
             View
           </Typography>
         </MenuItem>
-        <MenuItem
-          onClick={() => handleOpenFacilityDialog("update", selectedFacility)}
-        >
+        <MenuItem onClick={() => handleOpenFacilityDialog("update", selectedFacility)}>
           <EditOutlinedIcon sx={{ color: "#203FC7", fontSize: 20 }} />
           <Typography variant="body2" sx={{ color: "#1F263E" }}>
             Edit
@@ -246,78 +353,13 @@ export default function FacilityList() {
       </Menu>
 
       {/*================= Delete Confirmation Modal ==================*/}
-      <Dialog
+      <DeleteConfirmation
         open={isDeleteDialogOpen}
         onClose={handleCloseDeleteDialog}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{
-          sx: { borderRadius: "15px", p: 2 },
-        }}
-      >
-        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-          <IconButton onClick={handleCloseDeleteDialog} size="small">
-            <CloseIcon
-              sx={{
-                color: "red",
-                border: "1px solid red",
-                borderRadius: "50%",
-                fontSize: 16,
-                p: 0.2,
-              }}
-            />
-          </IconButton>
-        </Box>
-
-        <DialogContent sx={{ textAlign: "center", pb: 4 }}>
-          <Box sx={{ mb: 3 }}>
-            <img src={deleteImg} alt="Delete" style={{ width: "120px" }} />
-          </Box>
-
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: "700", color: "#333", mb: 1 }}
-          >
-            Delete This {selectedFacility?.name} Room ?
-          </Typography>
-
-          <Typography variant="body2" sx={{ color: "#666", mb: 4, px: 2 }}>
-            are you sure you want to delete this item ? if you are sure just
-            click on delete it
-          </Typography>
-
-          <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-            <Button
-              variant="outlined"
-              onClick={handleCloseDeleteDialog}
-              sx={{
-                borderColor: "#ccc",
-                color: "#666",
-                textTransform: "none",
-                borderRadius: "8px",
-                px: 4,
-                "&:hover": { borderColor: "#999", bgcolor: "transparent" },
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={confirmDelete}
-              sx={{
-                backgroundColor: "#ef4444",
-                textTransform: "none",
-                borderRadius: "8px",
-                px: 4,
-                boxShadow: "none",
-                "&:hover": { backgroundColor: "#dc2626", boxShadow: "none" },
-              }}
-            >
-              Delete
-            </Button>
-          </Box>
-        </DialogContent>
-      </Dialog>
+        onConfirm={confirmDelete}
+        itemName={selectedFacility?.name}
+        loading={loading}
+      />
 
       {/*================= Facility Modal (Add / Update) ==================*/}
       <Dialog
@@ -326,7 +368,7 @@ export default function FacilityList() {
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: { borderRadius: "15px", p: 2 },
+          sx: { borderRadius: "20px", p: 2 },
         }}
       >
         <Box
@@ -334,8 +376,9 @@ export default function FacilityList() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            px: 2,
+            px: { xs: 0, sm: 2 },
             pt: 1,
+            mb: 2,
           }}
         >
           <Typography variant="h5" sx={{ fontWeight: "700", color: "#333" }}>
@@ -347,28 +390,29 @@ export default function FacilityList() {
                 color: "red",
                 border: "1px solid red",
                 borderRadius: "50%",
-                fontSize: 16,
-                p: 0.2,
+                fontSize: 18,
+                p: 0.3,
               }}
             />
           </IconButton>
         </Box>
 
-        <DialogContent sx={{ mt: 2 }}>
+        <DialogContent sx={{ mt: 0 }}>
           <Box
             component="form"
             onSubmit={handleSubmit(onSubmitFacility)}
             noValidate
+            sx={{ display: "flex", flexDirection: "column", gap: 3 }}
           >
             <TextField
               fullWidth
-              placeholder="Name"
-              {...register("name", { required: "Name is required" })}
+              placeholder="Facility Name"
+              {...register("name", { required: "Facility Name is required" })}
               error={!!errors.name}
               helperText={errors.name?.message}
               sx={{
                 "& .MuiOutlinedInput-root": {
-                  borderRadius: "10px",
+                  borderRadius: "12px",
                   backgroundColor: "#F8F9FB",
                   "& fieldset": { borderColor: "transparent" },
                   "&:hover fieldset": { borderColor: "#ccc" },
@@ -377,16 +421,18 @@ export default function FacilityList() {
               }}
             />
 
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 6 }}>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4 }}>
               <Button
                 type="submit"
                 variant="contained"
+                disabled={loading}
                 sx={{
                   backgroundColor: "#203FC7",
                   textTransform: "none",
                   borderRadius: "8px",
-                  px: 5,
+                  px: { xs: 2, sm: 6 },
                   py: 1.2,
+                  width: { xs: "100%", sm: "auto" },
                   fontWeight: "600",
                   boxShadow: "none",
                   "&:hover": {
@@ -395,7 +441,24 @@ export default function FacilityList() {
                   },
                 }}
               >
-                {mode === "add" ? "Save" : "Update"}
+                {loading ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <CircularProgress size={20} sx={{ color: "#fff" }} />
+                    <Typography
+                      sx={{
+                        fontWeight: "600",
+                        color: "#fff",
+                        textTransform: "none",
+                      }}
+                    >
+                      Loading...
+                    </Typography>
+                  </Box>
+                ) : mode === "add" ? (
+                  "Save"
+                ) : (
+                  "Update"
+                )}
               </Button>
             </Box>
           </Box>

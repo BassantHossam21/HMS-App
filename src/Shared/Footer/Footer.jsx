@@ -14,37 +14,54 @@ const footerLinks = [
 
 export default function Footer() {
   return (
-    <Box component="footer" sx={{ py: 8, bgcolor: "white", borderTop: "1px solid #E5E5E5" }}>
+    <Box
+      component="footer"
+      sx={{
+        py: { xs: 5, md: 8 },
+        bgcolor: "white",
+        borderTop: "1px solid #E5E5E5",
+      }}
+    >
       <Container maxWidth="lg">
-        <Grid container spacing={4}>
-          
-          {/* Brand */}
-          <Grid xs={12} md={4}>
-            <Typography variant="h5" sx={{ fontWeight: 600, color: "#3252DF" }}>
+        <Grid container spacing={{ xs: 4, md: 6 }}>
+
+          {/* ---- Brand ---- */}
+          <Grid size={{ xs: 12, sm: 12, md: 4 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "#3252DF" }}>
               Stay
               <Box component="span" sx={{ color: "#152C5B" }}>
                 cation.
               </Box>
             </Typography>
-            <Typography variant="body1" sx={{ mt: 1, color: "#B0B0B0", maxWidth: 250 }}>
+            <Typography
+              variant="body2"
+              sx={{ mt: 1.5, color: "#B0B0B0", maxWidth: 240, lineHeight: 1.7 }}
+            >
               We kaboom your beauty holiday instantly and memorable.
             </Typography>
           </Grid>
 
-          {/* Links Sections */}
+          {/* ---- Links Group ---- */}
           {footerLinks.map((section) => (
-            <Grid key={section.title} xs={6} sm={4} md={2.5}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 500, color: "#152C5B", mb: 2 }}>
+            <Grid key={section.title} size={{ xs: 6, sm: 4, md: 2.5 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: 600, color: "#152C5B", mb: 2, fontSize: "15px" }}
+              >
                 {section.title}
               </Typography>
-
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
                 {section.links.map((link) => (
                   <Link
                     key={link}
                     href="#"
                     underline="none"
-                    sx={{ color: "#B0B0B0", "&:hover": { color: "#3252DF" } }}
+                    sx={{
+                      color: "#B0B0B0",
+                      fontSize: "14px",
+                      transition: "color 0.2s",
+                      "&:hover": { color: "#3252DF" },
+                    }}
                   >
                     {link}
                   </Link>
@@ -53,21 +70,41 @@ export default function Footer() {
             </Grid>
           ))}
 
-          {/* Contact */}
-          <Grid xs={12} sm={4} md={3}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 500, color: "#152C5B", mb: 2 }}>
+          {/* ---- Contact ---- */}
+          <Grid size={{ xs: 12, sm: 4, md: 3 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ fontWeight: 600, color: "#152C5B", mb: 2, fontSize: "15px" }}
+            >
               Connect Us
             </Typography>
-            <Typography sx={{ color: "#B0B0B0" }}>support@staycation.id</Typography>
-            <Typography sx={{ color: "#B0B0B0" }}>021 - 2208 - 1996</Typography>
-            <Typography sx={{ color: "#B0B0B0" }}>Staycation, Kemang, Jakarta</Typography>
+            {[
+              "support@staycation.id",
+              "021 - 2208 - 1996",
+              "Staycation, Kemang, Jakarta",
+            ].map((text) => (
+              <Typography
+                key={text}
+                sx={{ color: "#B0B0B0", fontSize: "14px", mb: 0.5 }}
+              >
+                {text}
+              </Typography>
+            ))}
           </Grid>
+
         </Grid>
 
-        {/* Copyright */}
-        <Box sx={{ mt: 8, textAlign: "center", borderTop: "1px solid #F0F1F2", pt: 3 }}>
+        {/* ---- Copyright ---- */}
+        <Box
+          sx={{
+            mt: { xs: 4, md: 6 },
+            textAlign: "center",
+            borderTop: "1px solid #F0F1F2",
+            pt: 3,
+          }}
+        >
           <Typography variant="body2" sx={{ color: "#B0B0B0" }}>
-            © 2019 • All rights reserved • Staycation
+            Copyright 2019 • All rights reserved • Staycation
           </Typography>
         </Box>
       </Container>

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import resetPass from "../../../assets/images/forgatImage.jpg";
-import useAuth from "../../../Hooks/useAuth";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm, useWatch } from "react-hook-form";
 import {
   Box,
@@ -8,14 +7,29 @@ import {
   Typography,
   TextField,
   Button,
-  FormHelperText,
   IconButton,
   InputAdornment,
 } from "@mui/material";
-import { Link } from "react-router-dom";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
+import resetPassImage from "@/assets/images/forgatImage.jpg";
+import useAuth from "@/Hooks/useAuth";
+
 export default function ResetPassword() {
+  //========================= 1. COMPONENT STATE (UI Toggles) ==============================
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleTogglePassword = () => setShowPassword((prev) => !prev);
+  const handleToggleConfirmPassword = () => setShowConfirmPassword((prev) => !prev);
+
+  //========================= 2. ROUTING & NAVIGATION =============================
+  const navigate = useNavigate();
+
+  //========================= 3. AUTHENTICATION & CONTEXT =========================
+  const { resetPassword } = useAuth();
+
+  //========================= 4. FORM HANDLING ====================================
   const {
     register,
     handleSubmit,
@@ -23,263 +37,397 @@ export default function ResetPassword() {
     formState: { errors },
   } = useForm({ mode: "onBlur" });
 
-  const { resetPassword } = useAuth();
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const handleTogglePassword = () => setShowPassword((prev) => !prev);
-  const handleToggleConfirmPassword = () =>
-    setShowConfirmPassword((prev) => !prev);
-
-  const onSubmit = async (data) => {
-    try {
-      await resetPassword(data);
-    } catch (err) {
-      console.log("error", err);
-    }
-  };
-
   const newPassword = useWatch({
     control,
     name: "password",
     defaultValue: "",
   });
 
-  return (
-    <>
-      <Box sx={{ flexGrow: 1, maxWidth: "95%", margin: "auto" }}>
-        <Grid container spacing={2}>
-          {/* LEFT SIDE */}
-          <Grid size={{ xs: 12, md: 6 }} sx={{ p: 3 }}>
-            {/* LOGO */}
-            <Box>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 800, color: "#152C5B" }}
-              >
-                Stay<span style={{ color: "#3252df" }}>cation.</span>
-              </Typography>
-            </Box>
+  //========================= 5. SUBMIT HANDLER ===================================
+  const onSubmit = async (data) => {
+    try {
+      await resetPassword(data);
+      navigate("/auth/login");
+    } catch (err) {
+      console.log("error", err);
+    }
+  };
 
-            <Box
+  return (
+    <Box
+      sx={{
+        height: { xs: "auto", md: "100vh" },
+        minHeight: "100vh",
+        backgroundColor: "#fff",
+        overflow: { xs: "auto", md: "hidden" },
+        display: "flex",
+      }}
+    >
+      <Grid container spacing={0} sx={{ flex: 1 }}>
+        {/* =================== 1. LEFT SIDE: LOGO & FORM CONTAINER ===================*/}
+        <Grid
+          size={{ xs: 12, md: 6 }}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100vh",
+            overflowY: { xs: "auto", md: "hidden" },
+            py: { xs: 4, md: 4 },
+          }}
+        >
+          {/* ----------------- LOGO SECTION ----------------- */}
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              color: "#152C5B",
+              fontSize: "32px",
+              mb: 0,
+              px: { xs: 4, md: 4 },
+            }}
+          >
+            <span style={{ color: "#3252DF" }}>Stay</span>cation.
+          </Typography>
+
+          {/* ----------------- FORM SECTION ----------------- */}
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              px: { xs: 4, md: 14 },
+            }}
+          >
+            <Typography
+              variant="h4"
               sx={{
-                margin: "auto",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                height: "100%",
+                fontWeight: 700,
+                color: "#152C5B",
+                mb: 2,
+                fontSize: "36px",
               }}
             >
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
-                Reset Password
-              </Typography>
+              Reset Password
+            </Typography>
 
-              <Typography sx={{ mb: 4, fontWeight: 300 }}>
-                If you don't have an account register <br />
-                You can{" "}
-                <Link
-                  to="/"
-                  style={{
-                    color: "#d82234ff",
+            <Typography sx={{ color: "#B0B0B0", mb: 6, fontSize: "14px" }}>
+              If you don't have an account register
+              <br />
+              You can{" "}
+              <Link
+                to="/auth/login"
+                style={{
+                  color: "#FF4D4D",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
+              >
+                Login here !
+              </Link>
+            </Typography>
+
+            <Box
+              component="form"
+              onSubmit={handleSubmit(onSubmit)}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+                width: "100%",
+              }}
+            >
+              {/* --- Email & OTP Row --- */}
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#152C5B",
+                      mb: 1.5,
+                      fontSize: "16px",
+                    }}
+                  >
+                    Email Address
+                  </Typography>
+                  <TextField
+                    {...register("email", {
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g,
+                        message: "Invalid email format",
+                      },
+                    })}
+                    error={!!errors.email}
+                    helperText={errors.email?.message}
+                    fullWidth
+                    placeholder="Please type here ..."
+                    variant="filled"
+                    size="small"
+                    type="email"
+                    sx={{
+                      "& .MuiFormHelperText-root": {
+                        position: "absolute",
+                        bottom: "-22px",
+                        mx: 0,
+                        fontSize: "12px",
+                        fontWeight: 600,
+                      },
+                      "& .MuiFilledInput-root": {
+                        backgroundColor: "#F5F6F8",
+                        borderRadius: "8px",
+                        "&:before, &:after": { display: "none" },
+                        "&:hover": { backgroundColor: "#EEF0F3" },
+                        "&.Mui-focused": { backgroundColor: "#EEF0F3" },
+                      },
+                      "& .MuiFilledInput-input": {
+                        padding: "16px 20px",
+                        color: "#152C5B",
+                        fontSize: "18px",
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#152C5B",
+                      mb: 1.5,
+                      fontSize: "16px",
+                    }}
+                  >
+                    OTP
+                  </Typography>
+                  <TextField
+                    {...register("seed", {
+                      required: "OTP is required",
+                      minLength: { value: 4, message: "OTP must be 4 digits" },
+                    })}
+                    error={!!errors.seed}
+                    helperText={errors.seed?.message}
+                    fullWidth
+                    placeholder="Please type here ..."
+                    variant="filled"
+                    size="small"
+                    sx={{
+                      "& .MuiFormHelperText-root": {
+                        position: "absolute",
+                        bottom: "-22px",
+                        mx: 0,
+                        fontSize: "12px",
+                        fontWeight: 600,
+                      },
+                      "& .MuiFilledInput-root": {
+                        backgroundColor: "#F5F6F8",
+                        borderRadius: "8px",
+                        "&:before, &:after": { display: "none" },
+                        "&:hover": { backgroundColor: "#EEF0F3" },
+                        "&.Mui-focused": { backgroundColor: "#EEF0F3" },
+                      },
+                      "& .MuiFilledInput-input": {
+                        padding: "16px 20px",
+                        color: "#152C5B",
+                        fontSize: "18px",
+                      },
+                    }}
+                  />
+                </Grid>
+              </Grid>
+
+              {/* --- Password Input --- */}
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
                     fontWeight: 600,
-                    textDecoration: "none",
-                    cursor: "pointer",
+                    color: "#152C5B",
+                    mb: 1.5,
+                    fontSize: "16px",
                   }}
                 >
-                  Login here !
-                </Link>
-              </Typography>
-
-              <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-                {/* Email */}
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 600, color: "#152C5B" }}
-                >
-                  Email
+                  New Password
                 </Typography>
                 <TextField
-                  sx={{ marginBottom: "15px" }}
-                  fullWidth
-                  placeholder="Please type here ..."
-                  variant="standard"
-                  {...register("email", {
-                    required: "Email is required",
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Invalid email address",
-                    },
-                  })}
-                />
-                <FormHelperText sx={{ color: "red" }}>
-                  {errors.email?.message}
-                </FormHelperText>
-
-                {/* Password */}
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 600, color: "#152C5B", mb: 1 }}
-                >
-                  Password
-                </Typography>
-                <TextField
-                  sx={{ marginBottom: "15px" }}
-                  type={showPassword ? "text" : "password"}
-                  fullWidth
-                  placeholder="Please type here ..."
-                  variant="standard"
                   {...register("password", {
                     required: "Password is required",
                     pattern: {
-                      value:
-                        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-                      message:
-                        "Password must be at least 8 characters, with uppercase, lowercase, number, and special character",
+                      value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+                      message: "Must be 8+ chars, with uppercase, lowercase, number, and special character",
                     },
                   })}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={handleTogglePassword}>
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                <FormHelperText sx={{ color: "red" }}>
-                  {errors.password?.message}
-                </FormHelperText>
-
-                {/* Confirm Password */}
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 600, color: "#152C5B", mb: 1 }}
-                >
-                  Confirm Password
-                </Typography>
-                <TextField
-                  sx={{ marginBottom: "15px" }}
-                  type={showConfirmPassword ? "text" : "password"}
+                  error={!!errors.password}
+                  helperText={errors.password?.message}
                   fullWidth
                   placeholder="Please type here ..."
-                  variant="standard"
-                  {...register("confirmPassword", {
-                    required: "Please confirm your password",
-                    validate: (value) =>
-                      value === newPassword || "Passwords do not match",
-                  })}
+                  variant="filled"
+                  size="small"
+                  type={showPassword ? "text" : "password"}
+                  sx={{
+                    "& .MuiFormHelperText-root": {
+                      position: "absolute",
+                      bottom: "-22px",
+                      mx: 0,
+                      fontSize: "12px",
+                      fontWeight: 600,
+                    },
+                    "& .MuiFilledInput-root": {
+                      backgroundColor: "#F5F6F8",
+                      borderRadius: "8px",
+                      "&:before, &:after": { display: "none" },
+                      "&:hover": { backgroundColor: "#EEF0F3" },
+                      "&.Mui-focused": { backgroundColor: "#EEF0F3" },
+                    },
+                    "& .MuiFilledInput-input": {
+                      padding: "16px 20px",
+                      color: "#152C5B",
+                      fontSize: "18px",
+                    },
+                  }}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton onClick={handleToggleConfirmPassword}>
-                          {showConfirmPassword ? (
-                            <VisibilityOff />
+                        <IconButton
+                          onClick={handleTogglePassword}
+                          edge="end"
+                          sx={{ color: "#B0B0B0" }}
+                        >
+                          {showPassword ? (
+                            <VisibilityOff sx={{ fontSize: 20 }} />
                           ) : (
-                            <Visibility />
+                            <Visibility sx={{ fontSize: 20 }} />
                           )}
                         </IconButton>
                       </InputAdornment>
                     ),
                   }}
                 />
-                <FormHelperText sx={{ color: "red" }}>
-                  {errors.confirmPassword?.message}
-                </FormHelperText>
+              </Box>
 
-                {/* OTP */}
+              {/* --- Confirm Password Input --- */}
+              <Box>
                 <Typography
                   variant="subtitle2"
-                  sx={{ fontWeight: 600, color: "#152C5B", mb: 1 }}
+                  sx={{
+                    fontWeight: 600,
+                    color: "#152C5B",
+                    mb: 1.5,
+                    fontSize: "16px",
+                  }}
                 >
-                  OTP
+                  Confirm Password
                 </Typography>
                 <TextField
-                  sx={{ marginBottom: "15px" }}
+                  {...register("confirmPassword", {
+                    required: "Please confirm your password",
+                    validate: (value) =>
+                      value === newPassword || "Passwords do not match",
+                  })}
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword?.message}
                   fullWidth
                   placeholder="Please type here ..."
-                  variant="standard"
-                  {...register("seed", {
-                    required: "OTP is required",
-                    minLength: { value: 4, message: "OTP must be 4 digits" },
-                  })}
-                />
-                <FormHelperText sx={{ color: "red" }}>
-                  {errors.seed?.message}
-                </FormHelperText>
-
-                <Button
-                  type="submit"
-                  variant="contained"
+                  variant="filled"
+                  size="small"
+                  type={showConfirmPassword ? "text" : "password"}
                   sx={{
-                    width: "50%",
-                    py: 1.6,
-                    backgroundColor: "#3252DF",
-                    borderRadius: "8px",
-                    "&:hover": { backgroundColor: "#2841BE" },
+                    "& .MuiFormHelperText-root": {
+                      position: "absolute",
+                      bottom: "-22px",
+                      mx: 0,
+                      fontSize: "12px",
+                      fontWeight: 600,
+                    },
+                    "& .MuiFilledInput-root": {
+                      backgroundColor: "#F5F6F8",
+                      borderRadius: "8px",
+                      "&:before, &:after": { display: "none" },
+                      "&:hover": { backgroundColor: "#EEF0F3" },
+                      "&.Mui-focused": { backgroundColor: "#EEF0F3" },
+                    },
+                    "& .MuiFilledInput-input": {
+                      padding: "16px 20px",
+                      color: "#152C5B",
+                      fontSize: "18px",
+                    },
                   }}
-                >
-                  Send Email
-                </Button>
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={handleToggleConfirmPassword}
+                          edge="end"
+                          sx={{ color: "#B0B0B0" }}
+                        >
+                          {showConfirmPassword ? (
+                            <VisibilityOff sx={{ fontSize: 20 }} />
+                          ) : (
+                            <Visibility sx={{ fontSize: 20 }} />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               </Box>
-            </Box>
-          </Grid>
 
-          {/* RIGHT SIDE */}
-          <Grid
-            size={6}
-            sx={{
-              display: {
-                xs: "none",
-                sm: "none",
-                md: "block",
-              },
-            }}
-          >
-            <Box
-              sx={{
-                margin: "auto",
-                height: "90vh",
-                position: "relative",
-                p: 2,
-              }}
-            >
-              <Box
+              {/* --- Submit Button --- */}
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
                 sx={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: "25px",
-                  overflow: "hidden",
-                  position: "relative",
+                  mt: 4,
+                  py: 1.5,
+                  backgroundColor: "#3252DF",
+                  borderRadius: "8px",
+                  textTransform: "none",
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  boxShadow: "0 8px 16px rgba(50, 82, 223, 0.24)",
+                  "&:hover": {
+                    backgroundColor: "#2844BD",
+                  },
                 }}
               >
-                <img
-                  src={resetPass}
-                  alt="Forget Password"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-                <Box
-                  sx={{
-                    position: "absolute",
-                    bottom: 40,
-                    left: 40,
-                    color: "#fff",
-                    zIndex: 1,
-                  }}
-                >
-                  <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                    Reset password
-                  </Typography>
-                  <Typography variant="subtitle1" sx={{ mt: 1 }}>
-                    Homes as unique as you.
-                  </Typography>
-                </Box>
-              </Box>
+                Reset Password
+              </Button>
             </Box>
-          </Grid>
+          </Box>
         </Grid>
-      </Box>
-    </>
+
+        {/* ==================== 2. RIGHT SIDE: IMAGE OVERLAY ==================== */}
+        <Grid
+          size={6}
+          sx={{
+            display: { xs: "none", md: "flex" },
+            p: 2,
+          }}
+        >
+          <Box
+            sx={{
+              flex: 1,
+              backgroundImage: `linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.3)), url(${resetPassImage})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              borderRadius: "20px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+              p: 6,
+            }}
+          >
+            <Typography variant="h4" sx={{ color: "#fff", fontWeight: 700 }}>
+              Reset password
+            </Typography>
+            <Typography variant="subtitle1" sx={{ color: "#fff", mt: 1 }}>
+              Homes as unique as you.
+            </Typography>
+          </Box>
+        </Grid>
+      </Grid>
+    </Box>
   );
 }

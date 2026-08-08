@@ -1,49 +1,65 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import useLandingRooms from "./../../Hooks/useLandingRooms";
-import axiosClient from "../../Api/AxiosClient";
+import React, { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import useLandingRooms from "@/Hooks/useLandingRooms";
+import useLandingBooking from "@/Hooks/useLandingBooking";
+import useLandingComments from "@/Hooks/useLandingComments";
+import useLandingRate from "@/Hooks/useLandingRate";
 import { toast } from "react-toastify";
+import { AuthContext } from "@/Context/AuthContext";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import {
   Box,
   Typography,
-  Breadcrumbs,
-  Link,
-  Grid,
-  CircularProgress,
-  Stack,
   Button,
   Rating,
   TextField,
-  Divider,
+  Breadcrumbs,
+  Link as MuiLink,
+  Container,
 } from "@mui/material";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import placeholderImg from "../../assets/images/hotals1 (1).png";
-import imgFacility1 from "../../assets/images/ic_bedroom.png";
-import imgFacility2 from "../../assets/images/ic_bathroom.png";
-import imgFacility3 from "../../assets/images/ic_diningroom.png";
-import imgFacility4 from "../../assets/images/ic_livingroom.png";
-import imgFacility5 from "../../assets/images/ic_wifi.png";
-import imgFacility6 from "../../assets/images/ic_ac.png";
-import imgFacility7 from "../../assets/images/ic_ref.png";
-import imgFacility8 from "../../assets/images/ic_tv.png";
+import LoadingSpinner from "@/Shared/LoadingSpinner/LoadingSpinner";
+import roomImg1 from "@/assets/images/RoomDetails(1).png";
+import roomImg2 from "@/assets/images/RoomDetails(2).png";
+import roomImg3 from "@/assets/images/RoomDetails(3).png";
+import imgFacility1 from "@/assets/images/ic_bedroom.png";
+import imgFacility2 from "@/assets/images/ic_bathroom.png";
+import imgFacility3 from "@/assets/images/ic_diningroom.png";
+import imgFacility4 from "@/assets/images/ic_livingroom.png";
+import imgFacility5 from "@/assets/images/ic_wifi.png";
+import imgFacility6 from "@/assets/images/ic_ac.png";
+import imgFacility7 from "@/assets/images/ic_ref.png";
+import imgFacility8 from "@/assets/images/ic_tv.png";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 export default function Details() {
+  // ================= Hooks & Routing =================
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ================= Custom Hooks & Context =================
   const { getRoomDetailsById, roomDetails } = useLandingRooms();
+  const { bookRoom, loading: bookingLoading } = useLandingBooking();
+  const { addComment, loading: commentLoading } = useLandingComments();
+  const { addReview, loading: rateLoading } = useLandingRate();
+  const { user } = useContext(AuthContext);
+
+  // ================= Local State =================
   const [loading, setLoading] = useState(true);
 
-  // Booking state — same pattern as Header.jsx
+  // ── Booking State ──
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
-  // Comment & rating state
+  // ── Comment & Rating State ──
   const [ratingValue, setRatingValue] = useState(3);
   const [comment, setComment] = useState("");
+  const [userComment, setUserComment] = useState("");
 
+  // ================= Effects =================
+  // Fetch room details on mount or when roomId changes
   useEffect(() => {
     const fetchDetails = async () => {
       setLoading(true);
@@ -53,13 +69,16 @@ export default function Details() {
     fetchDetails();
   }, [roomId]);
 
-  // ── Number of nights ──
+  // ================= Computed Values =================
+  // ── Calculate Number of Nights & Total Price ──
   const nights =
     startDate && endDate ? Math.max(endDate.diff(startDate, "day"), 0) : 0;
 
   const totalPrice =
     nights > 0 && roomDetails?.price ? nights * roomDetails.price : null;
-  // ──=============== Handle Booking Submission ==========──
+
+  // ================= Handlers =================
+  // ── Handle Booking Submission ──
   const handleContinueBook = async () => {
     const start = startDate ? startDate.format("YYYY-MM-DD") : "";
     const end = endDate ? endDate.format("YYYY-MM-DD") : "";
@@ -76,32 +95,22 @@ export default function Details() {
       totalPrice: totalPrice,
     };
 
-    try {
-      const response = await axiosClient.post(
-        "/api/v0/portal/booking",
-        bookingData,
-      );
-      toast.success(response.data?.message || "Booking successful!");
+    // Check if user is logged in before booking
+    if (!user) {
+      toast.info("Please login first to complete your booking.");
+      navigate("/auth/login", { state: { from: location } });
+      return;
+    }
 
-      navigate(`/payment/${response.data.data.booking._id}`);
+    try {
+      await bookRoom(bookingData);
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Booking failed. Please try again.",
-      );
+      console.error("Booking submission error:", error);
     }
   };
 
   if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="80vh"
-      >
-        <CircularProgress sx={{ color: "#152C5B" }} />
-      </Box>
-    );
+    return <LoadingSpinner loading={loading} />;
   }
 
   if (!roomDetails) {
@@ -114,11 +123,12 @@ export default function Details() {
     );
   }
 
-  const images = roomDetails.images || [];
-  const mainImage = images[0] || placeholderImg;
-  const sideImages = [images[1] || placeholderImg, images[2] || placeholderImg];
+  // ================= Render Helpers & Static Data =================
+  // ── Static gallery images ──
+  const img1 = roomImg1;
+  const img2 = roomImg2;
+  const img3 = roomImg3;
 
-  // ── Facilities rows ──
   const facilitiesRow1 = [
     { img: imgFacility1, label: `${roomDetails.capacity ?? 5} bedroom` },
     { img: imgFacility4, label: "1 living room" },
@@ -134,395 +144,388 @@ export default function Details() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ bgcolor: "#fff", minHeight: "100vh", pb: 10 }}>
-        <Box sx={{ px: { xs: 2, md: 10 }, pt: 4 }}>
-          {/* ── Breadcrumbs ── */}
-          <Breadcrumbs
-            separator="/"
-            aria-label="breadcrumb"
-            sx={{
-              mb: 2,
-              fontSize: "15px",
-              fontFamily: "'Poppins', sans-serif",
-            }}
-          >
-            <Link
-              underline="hover"
-              color="gray"
-              href="/"
-              sx={{ cursor: "pointer" }}
-            >
-              Home
-            </Link>
-            <Typography
-              color="#152C5B"
-              sx={{ fontWeight: 500, fontFamily: "'Poppins', sans-serif" }}
-            >
-              Room Details
-            </Typography>
-          </Breadcrumbs>
+      <Box sx={{ bgcolor: "#fff", minHeight: "100vh", py: { xs: 2, md: 4 }, pb: 10 }}>
+        <Container maxWidth="xl">
 
-          {/* ── Room Name ── */}
-          <Box sx={{ textAlign: "center", mb: 4 }}>
-            <Typography
-              variant="h4"
+          {/* ================== Header Section ================== */}
+          <Box sx={{ position: "relative", textAlign: "center", mb: 5 }}>
+            <Breadcrumbs
+              separator="/"
+              aria-label="breadcrumb"
               sx={{
-                fontWeight: 700,
-                color: "#152C5B",
-                fontFamily: "'Poppins', sans-serif",
+                position: { md: "absolute" },
+                left: 0,
+                top: "50%",
+                transform: { md: "translateY(-50%)" },
+                justifyContent: { xs: "center", md: "flex-start" },
+                display: "flex",
+                mb: { xs: 2, md: 0 },
               }}
             >
-              Room {roomDetails.roomNumber}
-            </Typography>
-            {roomDetails.createdBy?.userName && (
-              <Typography
-                sx={{
-                  color: "#9CA3AF",
-                  fontSize: 15,
-                  mt: 0.5,
-                  fontFamily: "'Poppins', sans-serif",
-                }}
+              <MuiLink
+                component={Link}
+                to="/"
+                color="#B0B0B0"
+                underline="hover"
+                sx={{ fontSize: "16px", fontWeight: 500 }}
               >
-                Hosted by {roomDetails.createdBy.userName}
+                Home
+              </MuiLink>
+              <Typography color="#152C5B" sx={{ fontSize: "16px", fontWeight: 600 }}>
+                Room Details
               </Typography>
-            )}
+            </Breadcrumbs>
+            <Typography variant="h3" sx={{ fontWeight: 800, color: "#152C5B", fontSize: { xs: "2rem", md: "2.5rem" } }}>
+              {roomDetails.roomNumber || "Village Angga"}
+            </Typography>
+            <Typography sx={{ color: "#B0B0B0", fontSize: 16, mt: 1 }}>
+              Bogor, Indonesia
+            </Typography>
           </Box>
 
-          {/* ── Photo Gallery ── */}
-          <Grid container spacing={2} sx={{ mb: 6 }}>
-            {/* Main large image */}
-            <Grid item xs={12} md={6}>
+          {/* ================== Photo Gallery Section ================== */}
+          <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 2, mb: 6 }}>
+            <Box
+              sx={{
+                width: { xs: "100%", md: "60%" },
+                height: { xs: "250px", sm: "400px", md: "500px" },
+                borderRadius: "20px",
+                backgroundImage: `url("${img1}")`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
+            <Box sx={{ width: { xs: "100%", md: "40%" }, display: "flex", flexDirection: { xs: "row", md: "column" }, gap: 2 }}>
               <Box
-                component="img"
-                src={mainImage}
-                alt={`Room ${roomDetails.roomNumber}`}
                 sx={{
-                  width: "100%",
-                  height: { xs: 250, md: 420 },
-                  objectFit: "cover",
-                  borderRadius: "16px",
+                  flex: { xs: 1, md: "none" },
+                  width: { xs: "auto", md: "100%" },
+                  height: { xs: "120px", sm: "190px", md: "242px" },
+                  borderRadius: "20px",
+                  backgroundImage: `url("${img2}")`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
                 }}
               />
-            </Grid>
+              <Box
+                sx={{
+                  flex: { xs: 1, md: "none" },
+                  width: { xs: "auto", md: "100%" },
+                  height: { xs: "120px", sm: "190px", md: "242px" },
+                  borderRadius: "20px",
+                  backgroundImage: `url("${img3}")`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
+            </Box>
+          </Box>
 
-            {/* Two side images stacked */}
-            <Grid item xs={12} md={6}>
-              <Stack spacing={2} height="100%">
-                {sideImages.map((img, idx) => (
-                  <Box
-                    key={idx}
-                    component="img"
-                    src={img}
-                    alt={`Room view ${idx + 2}`}
-                    sx={{
-                      width: "100%",
-                      height: { xs: 160, md: 200 },
-                      objectFit: "cover",
-                      borderRadius: "16px",
-                      flex: 1,
-                    }}
-                  />
-                ))}
-              </Stack>
-            </Grid>
-          </Grid>
+          {/* ================== Main Content: Description & Booking Card ================== */}
+          <Box sx={{ boxSizing: "border-box", display: "flex", flexDirection: { xs: "column", md: "row" }, width: "100%", mt: 5, gap: 4 }}>
 
-          {/* ── Main Content: Description + Booking Card ── */}
-          <Grid container spacing={4} sx={{ mb: 6 }}>
-            {/* ── LEFT: Description + Facilities ── */}
-            <Grid item xs={12} md={8}>
-              {/* Description paragraphs */}
+            {/* ── Left Column: Description & Facilities ── */}
+            <Box sx={{ width: { xs: "100%", md: "55%" }, flexShrink: 0 }}>
               <Typography
-                variant="body1"
-                sx={{ color: "#6B7280", lineHeight: 1.8, mb: 2 }}
+                sx={{
+                  pt: 3,
+                  color: "gray",
+                  fontSize: { xs: "0.9rem", sm: "0.9rem", md: "1rem" },
+                  lineHeight: 1.9,
+                }}
               >
                 Minimal techno is a minimalist subgenre of techno music. It is
                 characterized by a stripped-down aesthetic that exploits the use
                 of repetition and understated development. Minimal techno is
                 thought to have been originally developed in the early 1990s by
                 Detroit-based producers Robert Hood and Daniel Bell.
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{ color: "#6B7280", lineHeight: 1.8, mb: 2 }}
-              >
+                <br />
                 Such trends saw the demise of the soul-infused techno that
                 typified the original Detroit sound. Robert Hood has noted that
                 he and Daniel Bell both realized something was missing from
                 techno in the post-rave era.
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{ color: "#6B7280", lineHeight: 1.8 }}
-              >
+                <br />
                 Design is a plan or specification for the construction of an
                 object or system or for the implementation of an activity or
                 process, or the result of that plan or specification in the form
-                of a prototype, product or process. The national agency for
-                design: enabling Singapore to use design for economic growth and
-                to make lives better.
+                of a prototype, product or process.
               </Typography>
 
-              {/* ── Facilities Row 1 ── */}
-              <Stack direction="row" spacing={5} sx={{ mt: 4 }}>
-                {facilitiesRow1.map((f, i) => (
-                  <Stack key={i} alignItems="center" spacing={1}>
-                    <Box
-                      component="img"
-                      src={f.img}
-                      alt={f.label}
-                      sx={{ width: 50, height: 50 }}
-                    />
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#6B7280", textAlign: "center" }}
-                    >
-                      {f.label}
-                    </Typography>
-                  </Stack>
-                ))}
-              </Stack>
-
-              {/* ── Facilities Row 2 ── */}
-              <Stack direction="row" spacing={5} sx={{ mt: 3 }}>
-                {facilitiesRow2.map((f, i) => (
-                  <Stack key={i} alignItems="center" spacing={1}>
-                    <Box
-                      component="img"
-                      src={f.img}
-                      alt={f.label}
-                      sx={{ width: 50, height: 50 }}
-                    />
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#6B7280", textAlign: "center" }}
-                    >
-                      {f.label}
-                    </Typography>
-                  </Stack>
-                ))}
-              </Stack>
-            </Grid>
-
-            {/* ── RIGHT: Booking Card ── */}
-            <Grid item xs={12} md={4}>
+              {/* Facilities Grid */}
               <Box
                 sx={{
-                  border: "1px solid #E5E7EB",
-                  borderRadius: "15px",
-                  p: 3,
-                  boxShadow: "0px 4px 20px rgba(0,0,0,0.05)",
+                  display: "grid",
+                  gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)", md: "repeat(4, 1fr)" },
+                  columnGap: { xs: 2, md: 3 },
+                  rowGap: { xs: 4, md: 5 },
+                  mt: { md: 10, xs: 5 },
+                  width: "100%",
                 }}
               >
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: 600, color: "#152C5B", mb: 1.5 }}
-                >
+                {[...facilitiesRow1, ...facilitiesRow2].map((f, i) => (
+                  <Box key={i} sx={{ display: "flex", flexDirection: "column" }}>
+                    <Box
+                      sx={{
+                        width: "36px",
+                        height: "36px",
+                        mb: 1.5,
+                        backgroundImage: `url(${f.img})`,
+                        backgroundSize: "contain",
+                        backgroundRepeat: "no-repeat",
+                      }}
+                    />
+                    <Box>
+                      <Typography component="span" sx={{ fontWeight: 700, fontSize: { xs: "1rem", md: "1.1rem" } }}>
+                        {f.label.split(" ")[0]}
+                      </Typography>
+                      <Typography component="span" color="gray" sx={{ fontSize: { xs: "0.9rem", md: "1rem" } }}>
+                        {" "}{f.label.split(" ").slice(1).join(" ")}
+                      </Typography>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+
+            {/* ── Right Column: Booking Card ── */}
+            <Box
+              sx={{
+                boxSizing: "border-box",
+                width: { xs: "100%", md: "40%" },
+                maxWidth: { xs: "100%", sm: "500px", md: "none" },
+                mx: { xs: 0, sm: "auto", md: 0 },
+                px: { md: 4, xs: 2 },
+                py: 4,
+                border: "1px solid #E5E5E5",
+                borderRadius: "16px",
+                bgcolor: "#fff",
+              }}
+            >
+              <Box>
+                <Typography sx={{ mb: 1, fontWeight: 600, fontSize: 18, color: "#152C5B" }}>
                   Start Booking
                 </Typography>
-
-                {/* Price */}
-                <Stack
-                  direction="row"
-                  alignItems="baseline"
-                  spacing={1}
-                  sx={{ mb: 0.5 }}
-                >
-                  <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 700, color: "#3252DF" }}
-                  >
-                    ${roomDetails?.price}
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={{ color: "#B0B0B0", fontWeight: 400 }}
-                  >
-                    per night
-                  </Typography>
-                </Stack>
-
-                {/* Discount */}
+                <Typography component="span" sx={{ fontSize: 36, fontWeight: 700, color: "#1ABC9C" }}>
+                  ${roomDetails?.price || 280}
+                </Typography>
                 <Typography
-                  variant="body2"
-                  sx={{ color: "#E74C3C", fontWeight: 500, mb: 2.5 }}
+                  component="span"
+                  sx={{ fontWeight: 400, fontSize: 24, color: "#B0B0B0" }}
                 >
-                  Discount {roomDetails?.discount}% Off
+                  {" "}per night
                 </Typography>
-
-                {/* ── Pick a Date — same style as Header.jsx ── */}
-                <Typography sx={{ fontWeight: 500, mb: 1, color: "#152C5B" }}>
-                  Pick a Date
+                <Typography sx={{ color: "#FF498B", mt: 1, fontSize: 14, fontWeight: 500 }}>
+                  Discount {roomDetails?.discount || 20}% Off
                 </Typography>
+              </Box>
 
-                {/* Start Date */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    bgcolor: "#F5F6F8",
-                    borderRadius: 1,
-                    px: 1,
-                    mb: 1.5,
-                  }}
-                >
-                  <CalendarMonthIcon sx={{ color: "#152C5B", mr: 1 }} />
-                  <DatePicker
-                    label="Start"
-                    value={startDate}
-                    onChange={setStartDate}
-                    minDate={null}
-                    slotProps={{
-                      textField: {
-                        variant: "standard",
-                        InputProps: { disableUnderline: true },
-                        sx: { width: "100%" },
-                      },
-                    }}
-                  />
+              <Box>
+                <Box sx={{ mb: 2, mt: 5 }}>
+                  <Typography sx={{ color: "#152C5B", fontWeight: 500 }}>Pick a Date</Typography>
                 </Box>
 
-                {/* End Date */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    bgcolor: "#F5F6F8",
-                    borderRadius: 1,
-                    px: 1,
-                    mb: 2,
-                  }}
-                >
-                  <CalendarMonthIcon sx={{ color: "#152C5B", mr: 1 }} />
-                  <DatePicker
-                    label="End"
-                    value={endDate}
-                    onChange={setEndDate}
-                    minDate={startDate}
-                    slotProps={{
-                      textField: {
-                        variant: "standard",
-                        InputProps: { disableUnderline: true },
-                        sx: { width: "100%" },
-                      },
+                {/* ── Date Picker Selection ── */}
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      bgcolor: "#F5F6F8",
+                      borderRadius: 1,
+                      px: 1,
+                      width: "100%",
                     }}
-                  />
+                  >
+                    <CalendarMonthIcon sx={{ color: "#152C5B", mr: 1 }} />
+                    <DatePicker
+                      label="Start"
+                      value={startDate}
+                      onChange={setStartDate}
+                      slotProps={{
+                        textField: {
+                          variant: "standard",
+                          InputProps: { disableUnderline: true },
+                          sx: { width: "100%", minWidth: 0 },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      bgcolor: "#F5F6F8",
+                      borderRadius: 1,
+                      px: 1,
+                      width: "100%",
+                    }}
+                  >
+                    <CalendarMonthIcon sx={{ color: "#152C5B", mr: 1 }} />
+                    <DatePicker
+                      label="End"
+                      value={endDate}
+                      onChange={setEndDate}
+                      minDate={startDate}
+                      slotProps={{
+                        textField: {
+                          variant: "standard",
+                          InputProps: { disableUnderline: true },
+                          sx: { width: "100%", minWidth: 0 },
+                        },
+                      }}
+                    />
+                  </Box>
                 </Box>
 
-                {/* Total price summary */}
-                {totalPrice !== null && (
-                  <Typography variant="body2" sx={{ color: "#6B7280", mb: 2 }}>
+                <Box mt={4} mb={4}>
+                  <Typography component="span" color="#B0B0B0" sx={{ fontSize: { xs: "0.9rem", md: "1rem" } }}>
                     You will pay{" "}
-                    <Box
-                      component="span"
-                      sx={{ fontWeight: 700, color: "#152C5B" }}
-                    >
-                      ${totalPrice} USD
-                    </Box>{" "}
-                    per{" "}
-                    <Box
-                      component="span"
-                      sx={{ fontWeight: 700, color: "#152C5B" }}
-                    >
-                      {nights} Night{nights !== 1 ? "s" : ""}
-                    </Box>
                   </Typography>
-                )}
+                  <Typography component="span" sx={{ fontWeight: 700, color: "#152C5B", fontSize: { xs: "1.1rem", md: "1.2rem" } }}>
+                    ${totalPrice ?? (roomDetails?.price * 2) ?? 480} USD
+                  </Typography>
+                  <Typography component="span" color="#B0B0B0" sx={{ fontSize: { xs: "0.9rem", md: "1rem" } }}>
+                    {" "}per{" "}
+                  </Typography>
+                  <Typography component="span" sx={{ fontWeight: 700, color: "#152C5B", fontSize: { xs: "1.1rem", md: "1.2rem" } }}>
+                    {roomDetails?.capacity ?? 2} Person
+                  </Typography>
+                </Box>
 
-                {/* Continue Book button */}
                 <Button
                   onClick={handleContinueBook}
-                  variant="contained"
+                  disabled={bookingLoading}
                   fullWidth
                   sx={{
-                    bgcolor: "#3252DF",
-                    py: 1.5,
-                    borderRadius: 1,
-                    fontSize: 16,
-                    fontWeight: 500,
+                    background: "#3252DF",
+                    color: "white",
                     textTransform: "none",
-                    "&:hover": { bgcolor: "#2541c4" },
+                    borderRadius: "8px",
+                    py: 1.5,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    boxShadow: "0px 8px 15px rgba(50, 82, 223, 0.3)",
+                    "&:hover": { background: "#2541c4", boxShadow: "0px 10px 20px rgba(50, 82, 223, 0.4)" },
                   }}
                 >
-                  Continue Book
+                  {bookingLoading ? "Booking..." : "Continue Book"}
                 </Button>
               </Box>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
-          {/* ── Rating & Comment Section ── */}
-          <Divider sx={{ mb: 4 }} />
-          <Grid container spacing={6}>
-            {/* Rating */}
-            <Grid item xs={12} md={6}>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 600, color: "#152C5B", mb: 1 }}
-              >
-                Rate
-              </Typography>
-              <Rating
-                value={ratingValue}
-                onChange={(_, newVal) => setRatingValue(newVal)}
-                sx={{ fontSize: 36, mb: 2 }}
-              />
-              <Typography sx={{ fontWeight: 500, color: "#152C5B", mb: 1 }}>
-                Message
-              </Typography>
-              <TextField
-                placeholder="Write your review..."
-                multiline
-                minRows={3}
-                fullWidth
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    bgcolor: "#F5F6F8",
-                  },
-                }}
-              />
-            </Grid>
+          {/* ================== Reviews & Comments Section ================== */}
+          {user && (
+            <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, mt: 8, pt: 6 }}>
+              {/* ── Add Rating & Message ── */}
+              <Box sx={{ width: { xs: "100%", md: "50%" }, borderRight: { md: "1px solid #E5E5E5", xs: "none" }, borderBottom: { xs: "1px solid #E5E5E5", md: "none" }, pr: { md: 6, xs: 0 }, pb: { xs: 5, md: 0 }, mb: { xs: 5, md: 0 } }}>
+                <Typography sx={{ fontWeight: 600, color: "#152C5B", mb: 1 }}>Rate</Typography>
+                <Rating
+                  value={ratingValue}
+                  onChange={(_, newVal) => setRatingValue(newVal)}
+                  sx={{ color: "#f4c150", mb: 3 }}
+                />
+                <Typography sx={{ mb: 1, color: "#152C5B", fontWeight: 600 }}>Message</Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  variant="outlined"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "10px",
+                      "& fieldset": { borderColor: "#3252DF" },
+                      "&:hover fieldset": { borderColor: "#2541c4" },
+                      "&.Mui-focused fieldset": { borderColor: "#3252DF" },
+                    },
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  disabled={rateLoading}
+                  onClick={async () => {
+                    if (!comment.trim()) {
+                      toast.error("Please write a review message first!");
+                      return;
+                    }
+                    try {
+                      await addReview(roomId, ratingValue, comment);
+                      setComment("");
+                      setRatingValue(3);
+                    } catch (err) {}
+                  }}
+                  sx={{
+                    borderRadius: "6px",
+                    textTransform: "none",
+                    px: 5,
+                    py: 1.2,
+                    mt: 3,
+                    bgcolor: "#3252DF",
+                    fontWeight: 600,
+                    boxShadow: "none",
+                    "&:hover": { bgcolor: "#2541c4", boxShadow: "none" },
+                  }}
+                >
+                  Rate
+                </Button>
+              </Box>
 
-            {/* Add Your Comment */}
-            <Grid item xs={12} md={6}>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 600, color: "#152C5B", mb: 2 }}
-              >
-                Add Your Comment
-              </Typography>
-              <TextField
-                placeholder="Share your experience about this room..."
-                multiline
-                minRows={5}
-                fullWidth
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    bgcolor: "#F5F6F8",
-                  },
-                }}
-              />
-              <Button
-                variant="contained"
-                sx={{
-                  mt: 2,
-                  bgcolor: "#3252DF",
-                  borderRadius: 1,
-                  textTransform: "none",
-                  px: 4,
-                  py: 1.2,
-                  fontWeight: 500,
-                  "&:hover": { bgcolor: "#2541c4" },
-                }}
-              >
-                Send Comment
-              </Button>
-            </Grid>
-          </Grid>
-        </Box>
+              {/* ── Add Comment Box ── */}
+              <Box sx={{ width: { xs: "100%", md: "50%" }, pl: { md: 6, xs: 0 }, display: "flex", flexDirection: "column", height: "100%" }}>
+                <Typography sx={{ fontWeight: 600, color: "#152C5B", mb: { xs: 2, md: 6 } }}>
+                  Add Your Comment
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={6}
+                  variant="outlined"
+                  value={userComment}
+                  onChange={(e) => setUserComment(e.target.value)}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "10px",
+                      "& fieldset": { borderColor: "#3252DF" },
+                      "&:hover fieldset": { borderColor: "#2541c4" },
+                      "&.Mui-focused fieldset": { borderColor: "#3252DF" },
+                    },
+                  }}
+                />
+                <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
+                  <Button
+                    variant="contained"
+                    disabled={commentLoading}
+                    onClick={async () => {
+                      if (!userComment.trim()) {
+                        toast.error("Please write a comment first!");
+                        return;
+                      }
+                      try {
+                        await addComment(roomId, userComment);
+                        setUserComment(""); // clear on success
+                      } catch (err) {}
+                    }}
+                    sx={{
+                      borderRadius: "6px",
+                      textTransform: "none",
+                      px: 5,
+                      py: 1.2,
+                      bgcolor: "#3252DF",
+                      fontWeight: 600,
+                      boxShadow: "none",
+                      "&:hover": { bgcolor: "#2541c4", boxShadow: "none" },
+                    }}
+                  >
+                    Send
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </Container>
       </Box>
     </LocalizationProvider>
   );

@@ -2,10 +2,10 @@ import React from 'react';
 import { Box, Typography, Grid, Card, CardMedia, CardContent, Chip } from '@mui/material';
 
 // استيراد الصور
-import House1 from '../../assets/images/Houses1 (1).png';
-import House2 from '../../assets/images/Houses1 (2).png';
-import House3 from '../../assets/images/Houses1 (3).png';
-import House4 from '../../assets/images/Houses1 (4).png';
+import House1 from '@/assets/images/Houses1 (1).png';
+import House2 from '@/assets/images/Houses1 (2).png';
+import House3 from '@/assets/images/Houses1 (3).png';
+import House4 from '@/assets/images/Houses1 (4).png';
 
 const housesData = [
   { id: 1, name: 'Tabby Town', location: 'Gunung Batu, Indonesia', image: House1, popular: true },
@@ -16,42 +16,60 @@ const housesData = [
 
 export default function Houses() {
   return (
-    <Box sx={{ padding: 4 }}>
-      <Typography variant="h5" sx={{ fontWeight: '500', mb: 3, color: '#152C5B' }}>
+    <Box sx={{ px: { xs: 2, md: 4 }, py: 4 }}>
+      <Typography variant="h5" sx={{ fontWeight: 600, mb: 4, color: '#152C5B', fontFamily: "'Poppins', sans-serif" }}>
         Houses with beauty backyard
       </Typography>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={3}>
         {housesData.map((house) => (
-          <Grid item size={3} key={house.id}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={house.id}>
             <Card sx={{ borderRadius: '15px', boxShadow: 'none', position: 'relative', backgroundColor: 'transparent' }}>
               
               {house.popular && (
-                <Chip 
-                  label="Popular Choice" 
-                  sx={{ 
-                    position: 'absolute', top: 0, left: 0, zIndex: 1,
-                    backgroundColor: '#FF498C', color: 'white',
-                    borderRadius: '0 0 15px 0', fontSize: '0.7rem', fontWeight: 'bold'
-                  }} 
-                />
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    bgcolor: "#FF498B",
+                    color: "white",
+                    px: 2.5,
+                    py: 1,
+                    borderBottomLeftRadius: "15px",
+                    borderTopRightRadius: "15px",
+                    zIndex: 3,
+                    fontSize: "15px",
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5
+                  }}
+                >
+                  <span style={{ fontWeight: 'bold' }}>Popular</span> 
+                  <span style={{ fontWeight: 'normal', fontSize: '13px' }}>Choice</span>
+                </Box>
               )}
 
-              <Box sx={{ overflow: 'hidden', borderRadius: '15px' }}>
+              <Box sx={{ overflow: 'hidden', borderRadius: '15px', aspectRatio: '4/3', width: '100%', position: 'relative' }}>
                 <CardMedia
                   component="img"
-                  height="180"
                   image={house.image}
                   alt={house.name}
-                  sx={{ transition: '0.3s', '&:hover': { transform: 'scale(1.1)' } }}
+                  sx={{ 
+                    height: "100%",
+                    width: "100%",
+                    objectFit: "cover",
+                    transition: 'transform 0.5s ease', 
+                    '&:hover': { transform: 'scale(1.08)' } 
+                  }}
                 />
               </Box>
               
-              <CardContent sx={{ px: 0 }}>
-                <Typography variant="h6" sx={{ fontSize: '1.1rem', color: '#152C5B', fontWeight: 'bold' }}>
+              <CardContent sx={{ px: 0, pt: 2, pb: "0 !important" }}>
+                <Typography variant="h6" sx={{ fontSize: '1.1rem', color: '#152C5B', fontWeight: 600, mb: 0.5 }}>
                   {house.name}
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#B0B0B0' }}>
+                <Typography variant="body2" sx={{ color: '#B0B0B0', fontWeight: 400 }}>
                   {house.location}
                 </Typography>
               </CardContent>

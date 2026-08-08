@@ -1,11 +1,107 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
 .MuiChartsLegend-series {
   width: 100% !important;
   display: flex !important;
   justify-content: space-between !important;
 }
+
 .MuiChartsLegend-item {
   width: 100%;
 }
-.custom_width{
-  width:100%;
+
+.custom_width {
+  width: 100%;
+}
+
+/*================ Global Table Pagination Custom Design */
+.MuiTablePagination-root {
+  border-bottom: none !important;
+  color: #1F263E !important;
+  margin-top: 12px !important;
+}
+
+.MuiTablePagination-toolbar {
+  height: 80px !important;
+  min-height: 80px !important;
+  padding: 0 24px !important;
+}
+
+.MuiTablePagination-selectLabel, 
+.MuiTablePagination-displayedRows {
+  font-weight: 600 !important;
+  margin-top: 14px !important;
+}
+
+.MuiTablePagination-select {
+  font-weight: 600 !important;
+  background-color: #F8F9FB !important;
+  border-radius: 8px !important;
+  padding: 6px 20px 6px 12px !important; /* Brought the arrow slightly closer */
+}
+
+.MuiTablePagination-actions .MuiIconButton-root {
+  color: #203FC7 !important;
+  background-color: #F8F9FB !important;
+  border-radius: 8px !important;
+  margin-left: 8px !important;
+  padding: 6px !important;
+  transition: 0.3s !important;
+}
+
+.MuiTablePagination-actions .MuiIconButton-root:hover {
+  background-color: #E2E5EB !important;
+}
+
+.MuiTablePagination-actions .MuiIconButton-root.Mui-disabled {
+  color: #b0b0b0 !important;
+  background-color: transparent !important;
+}
+
+/*================ Global Rooms Pagination Custom Design */
+.rooms-pagination .MuiPagination-ul {
+  gap: 0;
+}
+
+.rooms-pagination .MuiPaginationItem-root {
+  margin: 0;
+  border-radius: 0;
+  border-color: #E5E5E5;
+  color: #152C5B;
+  font-weight: 500;
+  height: 40px;
+  min-width: 40px;
+}
+
+/* Prevent double borders */
+.rooms-pagination li:not(:last-child) .MuiPaginationItem-root {
+  border-right: none;
+}
+
+/* First item rounded corners */
+.rooms-pagination li:first-child .MuiPaginationItem-root {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+/* Last item rounded corners */
+.rooms-pagination li:last-child .MuiPaginationItem-root {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+/* Active page */
+.rooms-pagination .Mui-selected {
+  background-color: #3252DF !important;
+  color: #fff !important;
+  border-color: #3252DF !important;
 }

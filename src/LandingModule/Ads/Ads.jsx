@@ -8,27 +8,27 @@ import {
   CardContent,
   Chip,
 } from "@mui/material";
-import { useAdsApi } from "../../Hooks/useLandingAds";
+import { useAdsApi } from "@/Hooks/useLandingAds";
 
 export default function Ads() {
-  let { getAds, data, loading } = useAdsApi();
+  let { getAds, data } = useAdsApi();
   useEffect(() => {
     getAds();
   }, []);
 
   return (
     <>
-      <Box sx={{ padding: 4 }}>
+      <Box sx={{ px: { xs: 2, md: 4 }, py: 4 }}>
         <Typography
           variant="h5"
-          sx={{ fontWeight: "500", mb: 3, color: "#152C5B" }}
+          sx={{ fontWeight: 600, mb: 4, color: "#152C5B", fontFamily: "'Poppins', sans-serif" }}
         >
           Ads
         </Typography>
 
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {data.slice(0, 4).map((item) => (
-            <Grid item size={3} key={item._id}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item._id}>
               <Card
                 sx={{
                   borderRadius: "15px",
@@ -38,53 +38,58 @@ export default function Ads() {
                 }}
               >
                 {item.room.discount && (
-                  <Chip
-                    label={
-                      item.room.discount ? ` ${item.room.discount}% Off` : null
-                    }
+                  <Box
                     sx={{
                       position: "absolute",
                       top: 0,
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: "#FF498C",
+                      right: 0,
+                      bgcolor: "#FF498B",
                       color: "white",
-                      borderRadius: "0 0 15px 0",
-                      fontSize: "0.7rem",
-                      fontWeight: "bold",
+                      px: 2.5,
+                      py: 1,
+                      borderBottomLeftRadius: "15px",
+                      borderTopRightRadius: "15px",
+                      zIndex: 3,
+                      fontSize: "15px",
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5
                     }}
-                  />
+                  >
+                    <span style={{ fontWeight: 'bold' }}>{item.room.discount}%</span> 
+                    <span style={{ fontWeight: 'normal', fontSize: '13px' }}>Off</span>
+                  </Box>
                 )}
 
-                <Box sx={{ overflow: "hidden", borderRadius: "15px" }}>
+                <Box sx={{ overflow: "hidden", borderRadius: "15px", aspectRatio: '4/3', width: '100%', position: 'relative' }}>
                   <CardMedia
                     component="img"
-                    height="180"
                     image={item.room.images[0]}
                     alt={item.room.roomNumber}
                     sx={{
-                      transition: "0.3s",
-                      "&:hover": { transform: "scale(1.1)" },
+                      height: "100%",
+                      width: "100%",
+                      objectFit: "cover",
+                      transition: "transform 0.5s ease",
+                      "&:hover": { transform: "scale(1.08)" },
                     }}
                   />
                 </Box>
 
-                <CardContent sx={{ px: 0 }}>
+                <CardContent sx={{ px: 0, pt: 2, pb: "0 !important" }}>
                   <Typography
                     variant="h6"
                     sx={{
                       fontSize: "1.1rem",
                       color: "#152C5B",
-                      fontWeight: "bold",
+                      fontWeight: 600,
+                      mb: 0.5
                     }}
                   >
-                    {item.room.roomNumber}
+                    {item.room.roomName || `Room ${item.room.roomNumber}`}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: "#B0B0B0" }}>
-                    capacity: {item.room.capacity}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#B0B0B0" }}>
-                    price: {item.room.price} EGP
+                  <Typography variant="body2" sx={{ color: "#B0B0B0", fontWeight: 400 }}>
+                    {item.room.facilities?.[0]?.name ? `${item.room.facilities[0].name}, Indonesia` : `Capacity: ${item.room.capacity} | ${item.room.price} EGP`}
                   </Typography>
                 </CardContent>
               </Card>

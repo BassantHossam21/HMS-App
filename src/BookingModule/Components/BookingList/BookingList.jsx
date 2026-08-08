@@ -1,3 +1,6 @@
+// ==============================
+// 1. IMPORTS
+// ==============================
 import React, { useState, useEffect } from "react";
 import {
   Table,
@@ -7,7 +10,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Avatar,
   Typography,
   TableFooter,
   TablePagination,
@@ -15,24 +17,28 @@ import {
 } from "@mui/material";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import useUsers from "@/Hooks/useUsers";
+import { useBookingApi } from "@/Hooks/useBooking";
 import LoadingSpinner from "@/Shared/LoadingSpinner/LoadingSpinner";
 
-// ============================== 1. COMPONENT ============================
-export default function UsersList() {
+// ==============================
+// 2. COMPONENT
+// ==============================
+export default function BookingList() {
   // --- States ---
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // --- Custom Hooks & Data ---
-  const { users, totalCount, loading, getAllUsers } = useUsers();
+  const { loading, data, totalCount, getBookings } = useBookingApi();
 
   // --- API Calls ---
   useEffect(() => {
-    getAllUsers(page, rowsPerPage);
+    getBookings(page, rowsPerPage);
   }, [page, rowsPerPage]);
 
-  // ============================== 2. EVENT HANDLERS ============================
+  // ==============================
+  // 3. EVENT HANDLERS
+  // ==============================
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -42,7 +48,9 @@ export default function UsersList() {
     setPage(0);
   };
 
-  // ============================== 3. RENDER ============================
+  // ==============================
+  // 4. RENDER
+  // ==============================
   return (
     <>
       {/* ================= FULL SCREEN LOADING ================= */}
@@ -63,7 +71,7 @@ export default function UsersList() {
             variant="h5"
             sx={{ fontWeight: "bold", color: "#1F263E" }}
           >
-            Users Table Details
+            Booking Table Details
           </Typography>
           <Typography variant="body1" sx={{ color: "#6c757d", mt: 0.5 }}>
             You can check all details
@@ -91,14 +99,11 @@ export default function UsersList() {
           >
             <TableRow sx={{ height: "80px" }}>
               {[
-                "Profile",
-                "Username",
-                "Email",
-                "Phone",
-                "Country",
-                "Role",
-                "Verified",
-                "Created At",
+                "Room Number",
+                "Price",
+                "Start Date",
+                "End Date",
+                "User",
                 "Actions",
               ].map((headerName) => (
                 <TableCell key={headerName}>
@@ -120,34 +125,26 @@ export default function UsersList() {
 
           {/* ================= TABLE BODY (DATA) ================= */}
           <TableBody sx={{ "& .MuiTableCell-body": { color: "#3A3A3D" } }}>
-            {users.length > 0 ? (
-              users.map((user) => (
+            {data?.booking?.length > 0 ? (
+              data.booking.map((item) => (
                 <TableRow
-                  key={user._id}
+                  key={item._id}
                   sx={{
                     "&:hover": { backgroundColor: "#F8F9FB" },
                     transition: "0.3s",
                   }}
                 >
-                  {/* Avatar */}
                   <TableCell>
-                    <Avatar
-                      src={user.profileImage}
-                      alt={user.userName}
-                      sx={{ width: 50, height: 50 }}
-                    />
+                    {item.room?.roomNumber ? item.room?.roomNumber : "N/A"}
                   </TableCell>
-
-                  {/* User Details */}
-                  <TableCell>{user.userName}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.phoneNumber}</TableCell>
-                  <TableCell>{user.country}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>{user.verified ? "Yes" : "No"}</TableCell>
+                  <TableCell>${item.totalPrice}</TableCell>
                   <TableCell>
-                    {new Date(user.createdAt).toLocaleString()}
+                    {new Date(item.startDate).toLocaleDateString()}
                   </TableCell>
+                  <TableCell>
+                    {new Date(item.endDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>{item.user?.userName}</TableCell>
 
                   {/* Actions (View Button) */}
                   <TableCell>
@@ -170,8 +167,8 @@ export default function UsersList() {
               ))
             ) : !loading ? (
               <TableRow>
-                <TableCell colSpan={9} align="center">
-                  <Typography>No users found</Typography>
+                <TableCell colSpan={6} align="center">
+                  <Typography>No bookings found</Typography>
                 </TableCell>
               </TableRow>
             ) : null}
@@ -181,7 +178,7 @@ export default function UsersList() {
           <TableFooter>
             <TableRow>
               <TablePagination
-                count={totalCount}
+                count={totalCount || 0}
                 page={page}
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}

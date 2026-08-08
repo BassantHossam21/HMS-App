@@ -1,205 +1,240 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import WorkIcon from "@mui/icons-material/Work";
 import { PieChart } from "@mui/x-charts/PieChart";
-
-import useRooms from "../../../Hooks/useRooms";
-import useFacilities from "../../../Hooks/useFacilities";
-import useAds from "../../../Hooks/useAds";
-import useUsers from "../../../Hooks/useUsers";
-import { useBookingApi } from "../../../Hooks/useBooking";
+import useDashboard from "@/Hooks/useDashboard";
+import LoadingSpinner from "@/Shared/LoadingSpinner/LoadingSpinner";
 
 export default function Dashboard() {
   // ================= Hooks =================
-  const { fetchRooms } = useRooms();
-  const { totalCount: totalFacilities } = useFacilities();
-  const { total } = useAds();
-  const { users = [], loading: usersLoading } = useUsers(0, 1000);
+  const { chartsData, loading, getDashboardCharts } = useDashboard();
 
-  const {
-    bookings = [],
-    getBookings,
-    loading: bookingsLoading,
-  } = useBookingApi();
-
-  // ================= State =================
-  const [totalRooms, setTotalRooms] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  // ================= Rooms Count =================
   useEffect(() => {
-    const loadRoomsCount = async () => {
-      try {
-        const data = await fetchRooms(1, 1);
-        setTotalRooms(data?.totalCount || 0);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadRoomsCount();
+    getDashboardCharts();
   }, []);
-
-  // ================= Bookings =================
-  useEffect(() => {
-    getBookings(1, 1000);
-  }, []);
-
-  // if (loading || usersLoading || bookingsLoading) {
-  //   return <Typography>Loading...</Typography>;
-  // }
-
-  // ================= SAFE DATA =================
-  const safeUsers = Array.isArray(users) ? users : [];
-  const safeBookings = Array.isArray(bookings) ? bookings : [];
 
   // ================= Charts Data =================
+  const totalRooms = chartsData?.rooms || 0;
+  const totalFacilities = chartsData?.facilities || 0;
+  const total = chartsData?.ads || 0;
 
   // Users vs Admin
-  const adminCount = safeUsers.filter((u) => u.role === "admin").length;
-  const userCount = safeUsers.filter((u) => u.role === "user").length;
+  const adminCount = chartsData?.users?.admin || 0;
+  const userCount = chartsData?.users?.user || 0;
 
   // Bookings
-  const pendingBookings = safeBookings.filter(
-    (b) => b.status === "pending",
-  ).length;
+  const pendingBookings = chartsData?.bookings?.pending || 0;
+  const completedBookings = chartsData?.bookings?.completed || 0;
 
-  const completedBookings = safeBookings.filter(
-    (b) => b.status === "completed",
-  ).length;
+  const topCards = [
+    { title: "Rooms", count: totalRooms },
+    { title: "Facilities", count: totalFacilities },
+    { title: "Ads", count: total },
+  ];
 
   return (
-    <>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 4, md: 8 }, px: { xs: 2, md: 8 }, py: { xs: 3, md: 6 } }}>
+      {/* ================= LOADING SPINNER ================= */}
+      <LoadingSpinner loading={loading} />
       {/* ================= CARDS ================= */}
-      <Box sx={{ flexGrow: 1, mt: 3 }}>
-        <Grid
-          container
-          spacing={3}
-          sx={{ width: "100%", justifyContent: "center" }}
-        >
-          <Grid
-            sx={{ backgroundColor: "#1A1B1E", color: "#fff" }}
-            item
-            size={{ xs: 12, md: 4 }}
-            p={3}
-            borderRadius={2}
-          >
-            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-              <Typography variant="h5">
-                {totalRooms}
-                <Typography sx={{ mt: 1 }} variant="body2">
-                  Rooms
-                </Typography>
-              </Typography>
-              <WorkIcon />
-            </Box>
-          </Grid>
-
-          <Grid
-            sx={{ backgroundColor: "#1A1B1E", color: "#fff" }}
-            item
-            size={{ xs: 12, md: 4 }}
-            p={3}
-            borderRadius={2}
-          >
-            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-              <Typography variant="h5">
-                {totalFacilities}
-                <Typography sx={{ mt: 1 }} variant="body2">
-                  Facilities
-                </Typography>
-              </Typography>
-              <WorkIcon />
-            </Box>
-          </Grid>
-
-          <Grid
-            sx={{ backgroundColor: "#1A1B1E", color: "#fff" }}
-            item
-            size={{ xs: 12, md: 4 }}
-            p={3}
-            borderRadius={2}
-          >
-            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-              <Typography variant="h5">
-                {total}
-                <Typography sx={{ mt: 1 }} variant="body2">
-                  Ads
-                </Typography>
-              </Typography>
-              <WorkIcon />
-            </Box>
-          </Grid>
+      <Box sx={{ flexGrow: 1, width: "100%" }}>
+        <Grid container spacing={3}>
+          {topCards.map((card, idx) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={idx}>
+              <Box
+                sx={{
+                  backgroundColor: "#1A1B1E",
+                  color: "#fff",
+                  p: 4,
+                  borderRadius: 3,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Box>
+                  <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                    {card.count}
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    sx={{ color: "#8a8b8e", mt: 0.5 }}
+                  >
+                    {card.title}
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(32, 59, 140, 0.3)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <WorkIcon sx={{ color: "#3B5EDB" }} />
+                </Box>
+              </Box>
+            </Grid>
+          ))}
         </Grid>
       </Box>
 
       {/* ================= PIE CHARTS ================= */}
-      <Box sx={{ mt: 25 }}>
-        <Grid
-          container
-          spacing={2}
-          sx={{ display: "flex", justifyContent: "space-between", mt: 5 }}
-        >
+      <Box sx={{ width: "100%" }}>
+        <Grid container spacing={4} alignItems="center">
           {/* ===== LEFT: BOOKINGS ===== */}
-          <PieChart
-            series={[
-              {
-                data: [
-                  {
-                    id: 0,
-                    value: pendingBookings,
-                    label: "Pending",
-                    color: "#FFA500",
-                  },
-                  {
-                    id: 1,
-                    value: completedBookings,
-                    label: "Completed",
-                    color: "#4CAF50",
-                  },
-                ],
-              },
-            ]}
-            width={200}
-            height={200}
-          />
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, justifyContent: "center", alignItems: "center", gap: { xs: 4, md: 10 } }}>
+              <Box sx={{ width: 220, height: 220 }}>
+                <PieChart
+                  series={[
+                    {
+                      innerRadius: 65,
+                      outerRadius: 110,
+                      data: [
+                        { id: 0, value: pendingBookings, color: "#4B63F3" }, // Blue
+                        { id: 1, value: completedBookings, color: "#9B5DE5" }, // Purple
+                      ],
+                    },
+                  ]}
+                  slotProps={{ legend: { hidden: true } }}
+                  width={220}
+                  height={220}
+                  margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                />
+              </Box>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Box sx={{ width: 14, height: 14, borderRadius: "4px", backgroundColor: "#4B63F3" }} />
+                  <Typography variant="body2" sx={{ color: "#6c757d", fontWeight: 500 }}>
+                    pending
+                  </Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Box sx={{ width: 14, height: 14, borderRadius: "4px", backgroundColor: "#9B5DE5" }} />
+                  <Typography variant="body2" sx={{ color: "#6c757d", fontWeight: 500 }}>
+                    completed
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </Grid>
 
           {/* ===== RIGHT: USERS vs ADMIN ===== */}
-          <PieChart
-            slotProps={{
-              legend: {
-                sx: {
-                  display: "flex",
-                  width: "100%",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                },
-                direction: "horizontal",
-                position: { vertical: "bottom", horizontal: "center" },
-              },
-            }}
-            size={{ xs: 12, md: 6 }}
-            sx={{ width: "100%" }}
-            series={[
-              {
-                data: [
-                  { id: 0, value: userCount, label: "Users", color: "#54D14D" },
-                  {
-                    id: 1,
-                    value: adminCount,
-                    label: "Admins",
-                    color: "#35C2FD",
-                  },
-                ],
-              },
-            ]}
-            width={200}
-            height={200}
-          />
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Box
+              sx={{
+                backgroundColor: "#fff",
+                boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.03)",
+                borderRadius: 4,
+                p: 5,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                maxWidth: { xs: "100%", md: 320 },
+                mx: "auto",
+              }}
+            >
+              {/* Thin Donut Chart */}
+              <Box sx={{ position: "relative", width: 180, height: 180 }}>
+                <PieChart
+                  series={[
+                    {
+                      innerRadius: 82,
+                      outerRadius: 90,
+                      data: [
+                        { id: 0, value: userCount, color: "#2bcb60" }, // Green
+                        { id: 1, value: adminCount, color: "#3dc6f4" }, // Light Blue
+                      ],
+                    },
+                  ]}
+                  slotProps={{ legend: { hidden: true } }}
+                  width={180}
+                  height={180}
+                  margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                />
+                {/* Center Text */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography
+                    variant="body1"
+                    sx={{ fontWeight: "600", color: "#111", fontSize: "14px" }}
+                  >
+                    Users
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Custom Legend */}
+              <Box sx={{ width: "100%", mt: 6 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 3,
+                    alignItems: "center",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        backgroundColor: "#2bcb60",
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ color: "#333", fontWeight: 600, fontSize: "13px" }}>
+                      User
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ color: "#333", fontWeight: 600, fontSize: "13px" }}>
+                    {userCount}
+                  </Typography>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        backgroundColor: "#3dc6f4",
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ color: "#333", fontWeight: 600, fontSize: "13px" }}>
+                      Admin
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" sx={{ color: "#333", fontWeight: 600, fontSize: "13px" }}>
+                    {adminCount}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </Grid>
         </Grid>
       </Box>
-    </>
+    </Box>
   );
 }

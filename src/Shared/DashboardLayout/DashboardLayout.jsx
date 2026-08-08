@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import {
   Box,
@@ -12,19 +12,27 @@ import SideBar from "../SideBar/SideBar";
 import AdminNavbar from "../AdminNavbar/AdminNavbar";
 
 export default function DashboardLayout() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
       {/* Drawer */}
-      <SideBar />
+      <SideBar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
       {/* Content */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          overflow: "hidden",
+          overflow: "auto",
+          minHeight: "100vh",
+          px: { xs: 2, md: 3 }
         }}
       >
-        <AdminNavbar />
+        <AdminNavbar handleDrawerToggle={handleDrawerToggle} />
         <Outlet />
       </Box>
     </Box>

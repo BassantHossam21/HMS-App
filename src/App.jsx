@@ -18,7 +18,6 @@ import ChangePassword from "./AuthModule/Components/ChangePassword/ChangePasswor
 import Dashboard from "./DashboardModule/Components/Dashboard/Dashboard";
 import Register from "./AuthModule/Components/Register/Register";
 import DashboardLayout from "./Shared/DashboardLayout/DashboardLayout";
-import BookingList from "./DashboardModule/Components/BookingList/BookingList";
 import AdminProtectedRoute from "./Shared/AdminProtectedRoute/AdminProtectedRoute";
 import { AuthContextProvider } from "./Context/AuthContext";
 import UsersList from "./UsersModule/Components/Users/UsersList/UsersList";
@@ -35,6 +34,7 @@ import Details from "./LandingModule/Details/Details";
 import PaymentPage from "./LandingModule/Payment/Payment";
 import AdsList from "./AdsModule/Components/AdsList/AdsList";
 import PaymentSuccess from "./LandingModule/Payment/paymentsuccess";
+import BookingList from "./BookingModule/Components/BookingList/BookingList";
 
 // NavigationHandler component for setting global navigator
 function NavigationHandler() {
@@ -69,10 +69,10 @@ function App() {
       errorElement: <NotFound />,
       children: [
         { index: true, element: <Login /> },
+        { path: "login", element: <Login /> },
         { path: "register", element: <Register /> },
         { path: "forgetpass", element: <ForgetPassword /> },
         { path: "resetpass", element: <ResetPassword /> },
-        { path: "changepass", element: <ChangePassword /> },
         { path: "dashboard", element: <Dashboard /> },
       ],
     },
@@ -108,6 +108,10 @@ function App() {
         {
           path: "ads",
           element: <AdsList />,
+        },
+        {
+          path: "changepass",
+          element: <ChangePassword />,
         },
       ],
     },

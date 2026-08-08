@@ -18,6 +18,7 @@ import {
   TextField,
   Select,
   FormControl,
+  CircularProgress,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
@@ -25,12 +26,23 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import CloseIcon from "@mui/icons-material/Close"; // إضافة الـ CloseIcon
-import useAds from "../../../Hooks/useAds";
-import deleteImg from "../../../assets/images/Delete.png";
+import useAds from "@/Hooks/useAds";
+import deleteImg from "@/assets/images/Delete.png";
 import { useForm, Controller } from "react-hook-form";
-import axiosClient from "../../../Api/AxiosClient";
+import axiosClient from "@/Api/AxiosClient";
 
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+import LoadingSpinner from "@/Shared/LoadingSpinner/LoadingSpinner";
+import { TableFooter, TablePagination } from "@mui/material";
+import DeleteConfirmation from "@/Shared/delete confirmation/delete confirmation";
+
+// ==============================
+// 1. COMPONENT
+// ==============================
 export default function AdsList() {
+  // --- States ---
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [anchorEl, setAnchorEl] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAdsDialogOpen, setIsAdsDialogOpen] = useState(false);
@@ -39,7 +51,23 @@ export default function AdsList() {
   const [rooms, setRooms] = useState([]);
   const open = Boolean(anchorEl);
 
-  const { data, deleteAds, addAds, updateAds } = useAds();
+  // --- Custom Hooks & Data ---
+  const { data, total, loading, getAds, deleteAds, addAds, updateAds } = useAds();
+
+  // --- API Calls ---
+  useEffect(() => {
+    getAds(page, rowsPerPage);
+  }, [page, rowsPerPage]);
+
+  // --- Handlers for Pagination ---
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const {
     register,
@@ -62,6 +90,9 @@ export default function AdsList() {
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
   };
 
   const getRooms = async () => {
@@ -81,8 +112,10 @@ export default function AdsList() {
 
   //========================Delete Dialog===================================
   const handleOpenDeleteDialog = () => {
-    setIsDeleteDialogOpen(true);
     handleCloseMenu();
+    setTimeout(() => {
+      setIsDeleteDialogOpen(true);
+    }, 0);
   };
   const handleCloseDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
@@ -112,8 +145,10 @@ export default function AdsList() {
         isActive: true,
       });
     }
-    setIsAdsDialogOpen(true);
     handleCloseMenu();
+    setTimeout(() => {
+      setIsAdsDialogOpen(true);
+    }, 0);
   };
 
   const handleCloseAdsDialog = () => {
@@ -124,7 +159,6 @@ export default function AdsList() {
 
   const onSubmitAds = async (data) => {
     console.log("Submitting Ads Form:", mode, data);
-
     try {
       if (mode === "add") {
         await addAds(data);
@@ -146,23 +180,29 @@ export default function AdsList() {
 
   return (
     <Box>
-      {/* Header Section */}
+      {/* ================= FULL SCREEN LOADING ================= */}
+      <LoadingSpinner loading={loading} />
+
+      {/* ================= PAGE HEADER SECTION ================= */}
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
-          mb: 5,
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: { xs: 2, sm: 0 },
+          mb: 4,
+          mt: 2,
         }}
       >
         <Box>
           <Typography
-            variant="h6"
-            sx={{ fontWeight: "600", color: "#1F263E", fontSize: "1.25rem" }}
+            variant="h5"
+            sx={{ fontWeight: "bold", color: "#1F263E", fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
           >
             Ads Table Details
           </Typography>
-          <Typography variant="body2" sx={{ color: "#3A3A3D", mt: 0.5 }}>
+          <Typography variant="body1" sx={{ color: "#6c757d", mt: 0.5 }}>
             You can check all details
           </Typography>
         </Box>
@@ -173,10 +213,11 @@ export default function AdsList() {
             backgroundColor: "#203FC7",
             borderRadius: "8px",
             textTransform: "none",
-            px: 4,
+            px: { xs: 2, sm: 4 },
             py: 1.2,
             fontWeight: "500",
             boxShadow: "none",
+            width: { xs: "100%", sm: "auto" },
             "&:hover": {
               backgroundColor: "#1831a3",
               boxShadow: "none",
@@ -187,92 +228,129 @@ export default function AdsList() {
         </Button>
       </Box>
 
-      {/* Table Section */}
+      {/* ================= TABLE CONTAINER ================= */}
       <TableContainer
         component={Paper}
-        sx={{
-          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
-          borderRadius: "15px",
-          overflow: "hidden",
-          border: "none",
-        }}
+        sx={{ boxShadow: 3, borderRadius: "12px", overflowX: "auto" }}
       >
-        <Table>
-          <TableHead>
-            <TableRow
-              sx={{
-                backgroundColor: "#E2E5EB",
-                "& th": {
-                  border: "none",
-                  fontWeight: "bold",
-                  color: "#1F263E",
-                  py: 3,
-                },
-              }}
-            >
-              <TableCell>Room Name</TableCell>
-              <TableCell>Image</TableCell>
-              <TableCell>Price</TableCell>
-              <TableCell>Discount</TableCell>
-              <TableCell>Capacity</TableCell>
-              <TableCell>Active</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data.map((ad, index) => (
-              <TableRow
-                key={ad._id}
-                sx={{
-                  backgroundColor: index % 2 === 0 ? "#FFFFFF" : "#F8F9FB",
-                  "& td": { border: "none", py: 2, color: "#3A3A3D" },
-                }}
-              >
-                <TableCell sx={{ fontWeight: "500" }}>
-                  {ad.room.roomNumber}
-                </TableCell>
-                <TableCell>
-                  {ad.room.images?.[0] ? (
-                    <Box
-                      component="img"
-                      src={ad.room.images[0]}
-                      alt="Room"
+        <Table sx={{ minWidth: 1000 }}>
+          {/* ================= TABLE HEADERS ================= */}
+          <TableHead
+            sx={{
+              backgroundColor: "#E2E5EB",
+              "& .MuiTableCell-root": {
+                color: "#1F263E",
+                fontWeight: "600",
+                fontSize: "16px",
+                padding: "20px 16px",
+              },
+            }}
+          >
+            <TableRow sx={{ height: "80px" }}>
+              {[
+                "Room Name",
+                "Image",
+                "Price",
+                "Discount",
+                "Capacity",
+                "Active",
+                "Actions",
+              ].map((headerName) => (
+                <TableCell key={headerName} align={headerName === "Actions" ? "right" : "left"}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, justifyContent: headerName === "Actions" ? "flex-end" : "flex-start" }}>
+                    {headerName}
+                    <UnfoldMoreIcon
+                      htmlColor="#203FC7"
                       sx={{
-                        width: "60px",
-                        height: "45px",
-                        borderRadius: "8px",
-                        objectFit: "cover",
-                        boxShadow: "0px 2px 8px rgba(0,0,0,0.1)",
+                        fontSize: "26px",
+                        stroke: "#203FC7",
+                        strokeWidth: 0.4,
                       }}
                     />
-                  ) : (
-                    <Typography variant="caption" color="text.secondary">
-                      No Image
+                  </Box>
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+
+          {/* ================= TABLE BODY (DATA) ================= */}
+          <TableBody sx={{ "& .MuiTableCell-body": { color: "#3A3A3D" } }}>
+            {data?.length > 0 ? (
+              data.map((ad) => (
+                <TableRow
+                  key={ad._id}
+                  sx={{
+                    "&:hover": { backgroundColor: "#F8F9FB" },
+                    transition: "0.3s",
+                  }}
+                >
+                  <TableCell sx={{ fontWeight: "500" }}>
+                    {ad.room?.roomNumber || "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    {ad.room?.images?.[0] ? (
+                      <Box
+                        component="img"
+                        src={ad.room.images[0]}
+                        alt="Room"
+                        sx={{
+                          width: "60px",
+                          height: "45px",
+                          borderRadius: "8px",
+                          objectFit: "cover",
+                          boxShadow: "0px 2px 8px rgba(0,0,0,0.1)",
+                        }}
+                      />
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        No Image
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>${ad.room?.price || 0}</TableCell>
+                  <TableCell>${ad.room?.discount || ad.discount || 0}</TableCell>
+                  <TableCell>{ad.room?.capacity || "N/A"}</TableCell>
+                  <TableCell>
+                    <Typography
+                      sx={{
+                        fontSize: "0.85rem",
+                        color: ad.isActive ? "#2e7d32" : "#d32f2f",
+                        fontWeight: "600",
+                      }}
+                    >
+                      {ad.isActive ? "Yes" : "No"}
                     </Typography>
-                  )}
-                </TableCell>
-                <TableCell>{ad.room.price}</TableCell>
-                <TableCell>{ad.room.discount}</TableCell>
-                <TableCell>{ad.room.capacity}</TableCell>
-                <TableCell>
-                  <Typography
-                    sx={{
-                      fontSize: "0.85rem",
-                      color: ad.isActive ? "#2e7d32" : "#d32f2f",
-                      fontWeight: "500",
-                    }}
-                  >
-                    {ad.isActive ? "Yes" : "No"}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton onClick={(e) => handleClick(e, ad)}>
-                    <MoreHorizIcon />
-                  </IconButton>
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton onClick={(e) => handleClick(e, ad)}>
+                      <MoreHorizIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : !loading ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  <Typography>No ads found</Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : null}
           </TableBody>
+
+          {/* ================= TABLE FOOTER (PAGINATION) ================= */}
+          <TableFooter>
+            <TableRow>
+              <TablePagination
+                count={total || 0}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={[5, 10, 20, 50]}
+                labelRowsPerPage="Showing:"
+              />
+            </TableRow>
+          </TableFooter>
         </Table>
       </TableContainer>
 
@@ -281,6 +359,8 @@ export default function AdsList() {
         anchorEl={anchorEl}
         open={open}
         onClose={handleCloseMenu}
+        disableScrollLock
+        disableRestoreFocus
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
         PaperProps={{
@@ -319,78 +399,13 @@ export default function AdsList() {
       </Menu>
 
       {/*================= Delete Confirmation Modal ==================*/}
-      <Dialog
+      <DeleteConfirmation
         open={isDeleteDialogOpen}
         onClose={handleCloseDeleteDialog}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{
-          sx: { borderRadius: "15px", p: 2 },
-        }}
-      >
-        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-          <IconButton onClick={handleCloseDeleteDialog} size="small">
-            <CloseIcon
-              sx={{
-                color: "red",
-                border: "1px solid red",
-                borderRadius: "50%",
-                fontSize: 16,
-                p: 0.2,
-              }}
-            />
-          </IconButton>
-        </Box>
-
-        <DialogContent sx={{ textAlign: "center", pb: 4 }}>
-          <Box sx={{ mb: 3 }}>
-            <img src={deleteImg} alt="Delete" style={{ width: "120px" }} />
-          </Box>
-
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: "700", color: "#333", mb: 1 }}
-          >
-            Delete This {selectedAds?.room?.roomNumber} Room ?
-          </Typography>
-
-          <Typography variant="body2" sx={{ color: "#666", mb: 4, px: 2 }}>
-            are you sure you want to delete this item ? if you are sure just
-            click on delete it
-          </Typography>
-
-          <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-            <Button
-              variant="outlined"
-              onClick={handleCloseDeleteDialog}
-              sx={{
-                borderColor: "#ccc",
-                color: "#666",
-                textTransform: "none",
-                borderRadius: "8px",
-                px: 4,
-                "&:hover": { borderColor: "#999", bgcolor: "transparent" },
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={confirmDelete}
-              sx={{
-                backgroundColor: "#ef4444",
-                textTransform: "none",
-                borderRadius: "8px",
-                px: 4,
-                boxShadow: "none",
-                "&:hover": { backgroundColor: "#dc2626", boxShadow: "none" },
-              }}
-            >
-              Delete
-            </Button>
-          </Box>
-        </DialogContent>
-      </Dialog>
+        onConfirm={confirmDelete}
+        itemName={selectedAds?.room?.roomNumber}
+        loading={loading}
+      />
 
       {/*================= Ads Modal (Add / Update) ==================*/}
       <Dialog
@@ -407,7 +422,7 @@ export default function AdsList() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            px: 2,
+            px: { xs: 0, sm: 2 },
             pt: 1,
             mb: 2,
           }}
@@ -542,12 +557,14 @@ export default function AdsList() {
               <Button
                 type="submit"
                 variant="contained"
+                disabled={loading}
                 sx={{
                   backgroundColor: "#203FC7",
                   textTransform: "none",
                   borderRadius: "8px",
-                  px: 6,
+                  px: { xs: 2, sm: 6 },
                   py: 1.2,
+                  width: { xs: "100%", sm: "auto" },
                   fontWeight: "600",
                   boxShadow: "none",
                   "&:hover": {
@@ -556,7 +573,16 @@ export default function AdsList() {
                   },
                 }}
               >
-                {mode === "add" ? "Save" : "Update"}
+                {loading ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <CircularProgress size={20} sx={{ color: "#fff" }} />
+                    <Typography sx={{ fontWeight: "600", color: "#fff", textTransform: "none" }}>Loading...</Typography>
+                  </Box>
+                ) : mode === "add" ? (
+                  "Save"
+                ) : (
+                  "Update"
+                )}
               </Button>
             </Box>
           </Box>

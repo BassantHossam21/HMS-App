@@ -1,24 +1,66 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Card, CardMedia, Typography, IconButton } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/FavoriteBorder";
 import VisibilityIcon from "@mui/icons-material/VisibilityOutlined";
-import useDetails from "../../Hooks/useDetails";
-import useFavorites from "../../Hooks/useFavorites";
+import { useAdsApi } from "@/Hooks/useLandingAds";
+import useFavorites from "@/Hooks/useFavorites";
 import { useNavigate } from "react-router-dom";
 
-export default function MostPopularAds() {
-  const { data } = useDetails();
+// =================== Price Badge Component ===================
+const PriceBadge = ({ price }) => (
+  <Box
+    sx={{
+      position: "absolute",
+      top: 0,
+      right: 0,
+      bgcolor: "#FF498B",
+      color: "white",
+      px: 2.5,
+      py: 1,
+      borderBottomLeftRadius: "15px",
+      zIndex: 3,
+      fontSize: "15px",
+      display: 'flex',
+      alignItems: 'center',
+      gap: 0.5
+    }}
+  >
+    <span style={{ fontWeight: 'bold' }}>${price || 50}</span>
+    <span style={{ fontWeight: 'normal', fontSize: '13px' }}>per night</span>
+  </Box>
+);
+
+// =================== Title Overlay Component ===================
+const TitleOverlay = ({ title, location }) => (
+  <Box
+    sx={{
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      pt: 8,
+      pb: 2,
+      px: 3,
+      background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)",
+      zIndex: 2,
+      color: "white",
+    }}
+  >
+    <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "18px", mb: 0.5, lineHeight: 1.2 }}>
+      {title || "Blue Origin Fams"}
+    </Typography>
+    <Typography variant="body2" sx={{ fontWeight: 400, opacity: 0.9, fontSize: "14px" }}>
+      {location || "Jakarta, Indonesia"}
+    </Typography>
+  </Box>
+);
+
+// =================== Reusable Overlay Component ===================
+const HoverOverlay = ({ ad }) => {
   const { addFavorite } = useFavorites();
   const navigate = useNavigate();
 
-  if (!data || data.length === 0) return null;
-
-  const adsToShow = data.slice(0, 5);
-  const bigAd = adsToShow[0];
-  const smallAds = adsToShow.slice(1);
-
-  // Reusable Overlay Component
-  const HoverOverlay = ({ ad }) => (
+  return (
     <Box
       className="card-overlay"
       sx={{
@@ -73,6 +115,22 @@ export default function MostPopularAds() {
       </IconButton>
     </Box>
   );
+};
+
+export default function MostPopularAds() {
+  const { data, getAds } = useAdsApi();
+
+  useEffect(() => {
+    getAds();
+  }, []);
+
+  if (!data || data.length === 0) return null;
+
+  const adsToShow = data.slice(0, 5);
+  const bigAd = adsToShow[0];
+  const smallAds = adsToShow.slice(1);
+
+
 
   return (
     <Box sx={{ px: { xs: 2, md: 4 }, py: 4 }}>
@@ -144,6 +202,8 @@ export default function MostPopularAds() {
                   transition: "transform 0.5s ease",
                 }}
               />
+              <PriceBadge price={bigAd?.room?.price} />
+              <TitleOverlay title={bigAd?.room?.roomNumber ? `Room ${bigAd.room.roomNumber}` : undefined} location={bigAd?.room?.facilities?.[0]?.name} />
               <HoverOverlay ad={bigAd} />
             </Card>
           </Box>
@@ -173,6 +233,8 @@ export default function MostPopularAds() {
                 transition: "transform 0.5s ease",
               }}
             />
+            <PriceBadge price={ad?.room?.price} />
+            <TitleOverlay title={ad?.room?.roomNumber ? `Room ${ad.room.roomNumber}` : undefined} location={ad?.room?.facilities?.[0]?.name} />
             <HoverOverlay ad={ad} />
           </Card>
         ))}
